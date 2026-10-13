@@ -1,0 +1,16 @@
+# Fixed a priori from the literature (Hurst, Ooi & Pedersen 2017; Moskowitz, Ooi & Pedersen 2012); not tuned.
+horizons: {short: 21, medium: 63, long: 252}   # trading days
+vol_com: 60                 # EWMA centre of mass (days) for instrument volatility
+instrument_vol: 0.40        # per-instrument vol scaling before risk budgeting (HOP 2017)
+sector_budget: equal        # 1/6 of risk to each sector, equal within sector
+target_vol: 0.10            # portfolio ex-ante vol target (annualised)
+cov_halflife: 126           # days, for the ex-ante portfolio covariance used in the vol target
+max_leverage: 6.0           # cap on gross notional / NAV
+lag: 1                      # signal at close t, position held over t+1 (no same-bar trading)
+outlier_z: 8.0              # cleaning rule, see data.clean_returns
+buffer: 0.10                # no-trade band as a fraction of a full-signal position (EXP-002)
+signal: tanh_tstat          # tanh(trailing h-day log return / (sigma_daily sqrt h)) (EXP-002)
+# Secondary book (descriptive, no hypothesis): sector gross-exposure mix in the manager's N-CSR
+# (as of 30 Sep 2019), used as risk budgets. Currencies 37.7, Interest Rates 24.6, Equity Indices 20.9,
+# Ag 7.6, Metals 6.1, Energy 3.1 (percent).
+disclosed_sector_mix: {fx: 0.377, rates: 0.246, equity: 0.209, ags: 0.076, metals: 0.061, energy: 0.031}

@@ -1,0 +1,29 @@
+{
+ "H1_blend_sharpe_positive": {
+  "sharpe": 0.4552455426197302,
+  "ci": [
+   -0.07590108929561135,
+   0.9800984128801893
+  ],
+  "p_one_sided": 0.0456,
+  "n_months": 144
+ },
+ "H2_blend_minus_best_single": {
+  "best_single_from_dev_val": "long",
+  "diff": -0.2589856999578985,
+  "ci": [
+   -0.605143031638097,
+   0.10057316300857763
+  ],
+  "p_one_sided": 0.926,
+  "n_months": 144
+ },
+ "H3_convexity_vs_SPY": {
+  "alpha_m": 0.002836506504676397,
+  "beta": -0.21659135775615934,
+  "gamma": 1.0933656427043321,
+  "t_gamma": 0.960888988659062,
+  "p_gamma_one_sided": 0.16830399396365348,
+  "n_months": 144
+ }
+}
