@@ -4,3 +4,4 @@
 # Keep the pre-registration byte-exact so its SHA-256 (the test-period key) is the same on every OS.
 # This line must stay last: later lines override earlier ones.
 research/preregistration.md -text
+research/preregistration_v2.md -text
