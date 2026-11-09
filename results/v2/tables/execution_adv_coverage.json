@@ -1,0 +1,15 @@
+{
+ "share_traded_weight_without_adv": 0.029212112462649934,
+ "no_adv_instruments": [
+  "^STOXX50E",
+  "^FTSE"
+ ],
+ "forced_fallback": [
+  "AUD",
+  "CAD",
+  "EUR",
+  "GBP",
+  "JPY",
+  "MXN"
+ ]
+}

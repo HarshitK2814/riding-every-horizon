@@ -27,6 +27,7 @@ class TrendConfig:
     use: tuple | None = None          # subset of horizon names; None = all (the blend)
     sectors: tuple | None = None      # subset of sectors; None = all six
     sector_weights: dict | None = None  # risk budget per sector; None = equal (1/6 each)
+    signal: str = "tanh"              # "tanh" (v1) or "sign" (v1 EXP-001 variant, used by the v2 overfitting audit)
 
     @classmethod
     def from_yaml(cls, d: dict, **kw) -> "TrendConfig":
@@ -55,13 +56,23 @@ def horizon_signal(R: pd.DataFrame, h: int, com: int = 60) -> pd.DataFrame:
     return np.tanh(cum / (sd * np.sqrt(h)))
 
 
-def raw_positions(R: pd.DataFrame, sector: pd.Series, cfg: TrendConfig) -> tuple[pd.DataFrame, pd.DataFrame]:
+def horizon_signal_sign(R: pd.DataFrame, h: int, com: int = 60) -> pd.DataFrame:
+    """v1 EXP-001 variant: sign of the trailing h-day log return (kept for the overfitting audit)."""
+    cum = np.log1p(R).rolling(h, min_periods=h).sum()
+    return np.sign(cum)
+
+
+def raw_positions(R: pd.DataFrame, sector: pd.Series, cfg: TrendConfig,
+                  vol: pd.DataFrame | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Notional weights before the portfolio vol target: blend of horizon signals, each scaled to
     `instrument_vol`, then equal risk across sectors and equal within a sector.
+    `vol` (annualised, known at t) overrides the EWMA vol used for the risk scaling only.
     Returns (weights, unit) where unit is the weight a full-strength signal (|s| = 1) would get."""
-    vol = ewma_vol(R, cfg.vol_com)
+    if vol is None:                  # v2: an alternative annualised vol forecast known at t (e.g. GARCH)
+        vol = ewma_vol(R, cfg.vol_com)
     names = cfg.use or tuple(cfg.horizons)
-    sig = sum(horizon_signal(R, cfg.horizons[n], cfg.vol_com) for n in names) / len(names)
+    sig_fn = horizon_signal if cfg.signal == "tanh" else horizon_signal_sign
+    sig = sum(sig_fn(R, cfg.horizons[n], cfg.vol_com) for n in names) / len(names)
     unit = cfg.instrument_vol / vol
     if cfg.sectors is not None:
         keep = sector.reindex(unit.columns).isin(cfg.sectors)

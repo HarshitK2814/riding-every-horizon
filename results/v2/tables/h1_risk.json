@@ -1,0 +1,277 @@
+{
+ "prereg_hash": "2d7828df5093",
+ "h1_window": [
+  "2004-01-01",
+  "2017-12-31"
+ ],
+ "verdict_rule": "LITERAL: H1 supported iff mean-over-instruments RMSE(EWMA)-RMSE(GARCH) > 0 with 95% bootstrap CI excluding 0, GARCH exactly as qcore.risk.garch_vol_forecast (refit every 63d, min 750 obs, EWMA only before 750 obs)",
+ "h1_supported_literal": false,
+ "literal": {
+  "n_instruments": 39,
+  "h1_statistic_mean_rmse_ewma_minus_garch": -15.117176969874262,
+  "h1_ci95": [
+   -18.806961857113173,
+   -11.032000124015632
+  ],
+  "h1_supported_primary": false,
+  "alt_ci_mean_sq_error_diff_series": {
+   "mean": -4811.507683174893,
+   "ci95": [
+    -7689.889703080028,
+    -2520.67778310963
+   ]
+  },
+  "mean_rmse_ewma": 0.0820306490150636,
+  "mean_rmse_garch": 15.199207618889321,
+  "median_instrument_rmse_diff": 0.013677900500831917,
+  "n_instruments_garch_better": 32,
+  "n_instruments_ewma_better": 7,
+  "worst_instruments_for_garch": {
+   "PA=F": -362.8235449250162,
+   "PL=F": -227.2819912523303,
+   "UST2": -0.08825386008652034
+  },
+  "sensitivity_garch_available_only": {
+   "stat": -15.245991677408165,
+   "ci95": [
+    -18.935181738061328,
+    -11.202616177829187
+   ]
+  },
+  "per_sector_rmse_diff": {
+   "ags": {
+    "mean": 0.007441376812476261,
+    "n_instruments": 11
+   },
+   "energy": {
+    "mean": 0.01525741378023573,
+    "n_instruments": 5
+   },
+   "equity": {
+    "mean": 0.039405163888439704,
+    "n_instruments": 6
+   },
+   "fx": {
+    "mean": 0.01894068076877589,
+    "n_instruments": 8
+   },
+   "metals": {
+    "mean": -118.012986928906,
+    "n_instruments": 5
+   },
+   "rates": {
+    "mean": -0.012766455971313423,
+    "n_instruments": 4
+   }
+  },
+  "portfolio": {
+   "2001-2017": {
+    "ewma_sharpe_ci": [
+     0.35893531440940113,
+     -0.12524038614507899,
+     0.8609750239599073
+    ],
+    "garch_sharpe_ci": [
+     0.32824276482438103,
+     -0.19309483409289993,
+     0.8157835760449619
+    ],
+    "n_days": 4385,
+    "garch_minus_ewma": -0.0306925495850201,
+    "diff_ci95": [
+     -0.2374845155784424,
+     0.17931860533239094
+    ],
+    "ewma_rebalance_days": 4383,
+    "garch_rebalance_days": 4385
+   },
+   "2004-2017": {
+    "ewma_sharpe_ci": [
+     0.25198763710871597,
+     -0.30620522375354337,
+     0.7702659092664622
+    ],
+    "garch_sharpe_ci": [
+     0.2593648738051013,
+     -0.261657013249257,
+     0.7381314467087485
+    ],
+    "n_days": 3612,
+    "garch_minus_ewma": 0.0073772366963853475,
+    "diff_ci95": [
+     -0.2548230726982469,
+     0.2408650960484564
+    ],
+    "ewma_rebalance_days": 3610,
+    "garch_rebalance_days": 3612
+   }
+  },
+  "var99": {
+   "ewma_book_ewma_cov": {
+    "n": 3612,
+    "breaches": 66,
+    "breach_rate": 0.018272425249169437,
+    "kupiec_p": 7.5009536101771145e-06,
+    "christoffersen_p": 0.007757486401360004,
+    "mean_var_pct": 1.4539550703736492,
+    "pass_both_gt_0.05": false
+   },
+   "garch_book_ewma_cov": {
+    "n": 3612,
+    "breaches": 58,
+    "breach_rate": 0.016057585825027684,
+    "kupiec_p": 0.0007703593041021985,
+    "christoffersen_p": 0.015496618251771425,
+    "mean_var_pct": 1.4407430588924268,
+    "pass_both_gt_0.05": false
+   },
+   "garch_book_garch_cov": {
+    "n": 3612,
+    "breaches": 83,
+    "breach_rate": 0.022978959025470654,
+    "kupiec_p": 2.002513524936959e-11,
+    "christoffersen_p": 0.9459275343205634,
+    "mean_var_pct": 1.1884452007424495,
+    "pass_both_gt_0.05": false
+   }
+  },
+  "h1_secondary_garch_var_pass": {
+   "ewma_cov_scaling": false,
+   "garch_cov_scaling": false
+  }
+ },
+ "guarded_sensitivity": {
+  "n_instruments": 39,
+  "h1_statistic_mean_rmse_ewma_minus_garch": -0.195353394815037,
+  "h1_ci95": [
+   -0.3132456689996831,
+   -0.03193700321818721
+  ],
+  "h1_supported_primary": false,
+  "alt_ci_mean_sq_error_diff_series": {
+   "mean": -1.7416637454928707,
+   "ci95": [
+    -4.251204372663983,
+    -0.08549971705110754
+   ]
+  },
+  "mean_rmse_ewma": 0.0820306490150636,
+  "mean_rmse_garch": 0.27738404383010057,
+  "median_instrument_rmse_diff": 0.012718803711572406,
+  "n_instruments_garch_better": 33,
+  "n_instruments_ewma_better": 6,
+  "worst_instruments_for_garch": {
+   "PL=F": -8.158003500993463,
+   "UST2": -0.051224674935449924,
+   "KC=F": -0.012579962686627026
+  },
+  "sensitivity_garch_available_only": {
+   "stat": 0.015799246651492467,
+   "ci95": [
+    -1.1153189792060088,
+    0.019087159869016858
+   ]
+  },
+  "per_sector_rmse_diff": {
+   "ags": {
+    "mean": 0.006768055968225151,
+    "n_instruments": 11
+   },
+   "energy": {
+    "mean": 0.011352049643764746,
+    "n_instruments": 5
+   },
+   "equity": {
+    "mean": 0.039405163888439704,
+    "n_instruments": 6
+   },
+   "fx": {
+    "mean": 0.018946718922688607,
+    "n_instruments": 8
+   },
+   "metals": {
+    "mean": -1.624791871526741,
+    "n_instruments": 5
+   },
+   "rates": {
+    "mean": -0.00350915968354582,
+    "n_instruments": 4
+   }
+  },
+  "portfolio": {
+   "2001-2017": {
+    "ewma_sharpe_ci": [
+     0.35893531440940113,
+     -0.12524038614507899,
+     0.8609750239599073
+    ],
+    "garch_sharpe_ci": [
+     0.3421208520092985,
+     -0.1256561802085671,
+     0.8316240370783882
+    ],
+    "n_days": 4385,
+    "garch_minus_ewma": -0.016814462400102648,
+    "diff_ci95": [
+     -0.09167222073495891,
+     0.04985412537530999
+    ],
+    "ewma_rebalance_days": 4383,
+    "garch_rebalance_days": 4383
+   },
+   "2004-2017": {
+    "ewma_sharpe_ci": [
+     0.25198763710871597,
+     -0.30620522375354337,
+     0.7702659092664622
+    ],
+    "garch_sharpe_ci": [
+     0.24273775940281164,
+     -0.29626351672730517,
+     0.7658247253995317
+    ],
+    "n_days": 3612,
+    "garch_minus_ewma": -0.009249877705904325,
+    "diff_ci95": [
+     -0.09627021650251191,
+     0.07442504654622387
+    ],
+    "ewma_rebalance_days": 3610,
+    "garch_rebalance_days": 3610
+   }
+  },
+  "var99": {
+   "ewma_book_ewma_cov": {
+    "n": 3612,
+    "breaches": 66,
+    "breach_rate": 0.018272425249169437,
+    "kupiec_p": 7.5009536101771145e-06,
+    "christoffersen_p": 0.007757486401360004,
+    "mean_var_pct": 1.4539550703736492,
+    "pass_both_gt_0.05": false
+   },
+   "garch_book_ewma_cov": {
+    "n": 3612,
+    "breaches": 61,
+    "breach_rate": 0.016888150609080842,
+    "kupiec_p": 0.00015219772759329165,
+    "christoffersen_p": 0.022421070022286705,
+    "mean_var_pct": 1.449137802324977,
+    "pass_both_gt_0.05": false
+   },
+   "garch_book_garch_cov": {
+    "n": 3612,
+    "breaches": 66,
+    "breach_rate": 0.018272425249169437,
+    "kupiec_p": 7.5009536101771145e-06,
+    "christoffersen_p": 0.8438178625122915,
+    "mean_var_pct": 1.3587713519719296,
+    "pass_both_gt_0.05": false
+   }
+  },
+  "h1_secondary_garch_var_pass": {
+   "ewma_cov_scaling": false,
+   "garch_cov_scaling": false
+  }
+ }
+}

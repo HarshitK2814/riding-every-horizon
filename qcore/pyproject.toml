@@ -7,7 +7,7 @@ name = "qcore"
 version = "0.1.0"
 description = "Shared research utilities: time splits, performance metrics, bootstrap inference."
 requires-python = ">=3.11"
-dependencies = ["numpy>=1.26", "pandas>=2.1", "scipy>=1.11"]
+dependencies = ["numpy>=1.26", "pandas>=2.1", "scipy>=1.11", "arch>=7"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]

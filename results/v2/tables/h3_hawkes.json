@@ -1,0 +1,124 @@
+{
+ "prereg_hash": "2d7828df5093",
+ "window": [
+  "2001-01-01",
+  "2017-12-31"
+ ],
+ "timing": "events, intensity, rv known before first trading day of month; ret = month-m v1 blend net (lag 1)",
+ "events": {
+  "n": 59,
+  "n_days": 4299,
+  "rule": "ES=F r < -2.5 x EWMA(com 60) sigma lagged one day"
+ },
+ "hawkes_full_sample": {
+  "mu": 0.01008358369452163,
+  "alpha": 0.05077195122470605,
+  "beta": 0.19140047988406103,
+  "branching": 0.2652655377638586,
+  "loglik": -301.36381987251025
+ },
+ "hawkes_param_ci95_parametric_200_resims": {
+  "mu": [
+   0.00687139301957047,
+   0.013278244845401969
+  ],
+  "alpha": [
+   0.015218086043997988,
+   0.16772919454875088
+  ],
+  "beta": [
+   0.06690489928051034,
+   1.2487490274906723
+  ],
+  "branching": [
+   0.0694966730755272,
+   0.4394504933438603
+  ]
+ },
+ "hawkes_note": "event times are integer trading-day positions; the continuous-time fit treats days as time units",
+ "tick_HawkesExpKern": {
+  "skipped": "AttributeError(\"'HawkesExpKern' object has no settable attribute 'events'\")"
+ },
+ "blend": {
+  "first_month": "2007-12-03",
+  "intensity_sd": 0.008454608687527874,
+  "multivariate": {
+   "n_months": 121,
+   "coef": {
+    "const": -0.0006857446901776055,
+    "intensity": 0.1787623782950201,
+    "rv": -0.0005277865322144813
+   },
+   "nw_t": {
+    "const": -0.11489240199328421,
+    "intensity": 0.799954745973822,
+    "rv": -0.017648807381133332
+   },
+   "nw_p": {
+    "const": 0.9085304075446486,
+    "intensity": 0.4237370170596283,
+    "rv": 0.9859190200693527
+   },
+   "r2": 0.0023578356283061597
+  },
+  "univariate": {
+   "n_months": 121,
+   "coef": {
+    "const": -0.0007816517501848083,
+    "intensity": 0.1790865513388975
+   },
+   "nw_t": {
+    "const": -0.1629271982878401,
+    "intensity": 0.7971051811412518
+   },
+   "nw_p": {
+    "const": 0.870575755814534,
+    "intensity": 0.42538994754726167
+   },
+   "r2": 0.0023539837166697275
+  },
+  "h3_supported": false
+ },
+ "blend_ex_rates": {
+  "first_month": "2007-12-03",
+  "intensity_sd": 0.008454608687527874,
+  "multivariate": {
+   "n_months": 121,
+   "coef": {
+    "const": 0.00314299252024595,
+    "intensity": 0.0015034215478216708,
+    "rv": -0.0074012331401554264
+   },
+   "nw_t": {
+    "const": 0.5183742280441623,
+    "intensity": 0.004768384725453609,
+    "rv": -0.28198027523190855
+   },
+   "nw_p": {
+    "const": 0.6041971924161086,
+    "intensity": 0.9961953938654653,
+    "rv": 0.7779586349311292
+   },
+   "r2": 0.0007793651829393067
+  },
+  "univariate": {
+   "n_months": 121,
+   "coef": {
+    "const": 0.0017980728082519213,
+    "intensity": 0.00604935087539216
+   },
+   "nw_t": {
+    "const": 0.3382845911852338,
+    "intensity": 0.019138205856052727
+   },
+   "nw_p": {
+    "const": 0.7351487344232603,
+    "intensity": 0.984730853139098
+   },
+   "r2": 2.7537907550945206e-06
+  },
+  "h3_supported": false
+ },
+ "h3_supported_literal": false,
+ "h3_rule": "supported iff intensity coef > 0 and Newey-West (3 lags) t > 2 in ret ~ intensity + rv, 2001-2017 (blend, all sectors)"
+}

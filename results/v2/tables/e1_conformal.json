@@ -1,0 +1,79 @@
+{
+ "label": "EXPLORATORY (E1); not a hypothesis test; never headline",
+ "prereg_hash": "2d7828df5093",
+ "timing": "features at close t, label t+1..t+21, interval from labels realised by t (delay 5 weekly rows), position change lag 2",
+ "fit": {
+  "b": 0.16575896899426626,
+  "corr_signal_label_2001_2008": 0.05526395822767717,
+  "n_train_rows": 14315
+ },
+ "coverage_target": 0.9,
+ "coverage_2009_2017": {
+  "overall_weighted": 0.9089237487789461,
+  "bootstrap_ci95_weekly_mean": [
+   0.8903626722168175,
+   0.9261979605826356
+  ],
+  "by_sector": {
+   "ags": {
+    "coverage": 0.9071103188750248,
+    "n_obs": 5049.0,
+    "n_instruments": 11.0
+   },
+   "energy": {
+    "coverage": 0.9084302325581395,
+    "n_obs": 2064.0,
+    "n_instruments": 5.0
+   },
+   "equity": {
+    "coverage": 0.9051065540812223,
+    "n_obs": 2487.0,
+    "n_instruments": 6.0
+   },
+   "fx": {
+    "coverage": 0.9158496732026143,
+    "n_obs": 3672.0,
+    "n_instruments": 8.0
+   },
+   "metals": {
+    "coverage": 0.9076252723311546,
+    "n_obs": 2295.0,
+    "n_instruments": 5.0
+   },
+   "rates": {
+    "coverage": 0.9074074074074074,
+    "n_obs": 1836.0,
+    "n_instruments": 4.0
+   }
+  }
+ },
+ "filter_book_2009_2017": {
+  "base_v1_lag2_sharpe_ci": [
+   -0.19039552591209694,
+   -0.8155627635595862,
+   0.4681648380436346
+  ],
+  "filtered_sharpe_ci": [
+   -0.21460207064045184,
+   -0.8614382965756762,
+   0.44331390465105924
+  ],
+  "diff_filtered_minus_base": -0.0242065447283549,
+  "diff_ci95": [
+   -0.0647733391229201,
+   0.013996774538558774
+  ],
+  "n_days": 2319,
+  "turnover_per_yr_base": 122.73861365133189,
+  "turnover_per_yr_filtered": 61.87226922425013,
+  "rebalance_days_base": 2317,
+  "rebalance_days_filtered": 2317,
+  "mean_keep_share_full_position": 0.0276644442233058
+ },
+ "mapie_enbpi_crosscheck_ES": {
+  "coverage": 0.9084967320261438,
+  "n": 459,
+  "aci_delayed_coverage_ES": 0.906318082788671,
+  "note": "static EnbPI (no re-fit of residuals after training) vs our delayed ACI; ES=F only"
+ }
+}

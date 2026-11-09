@@ -25,10 +25,11 @@ class Splits:
     validation: tuple[str, str]
     test: tuple[str, str]
     recent: tuple[str, str | None]
+    forward: tuple[str, str | None] | None = None
 
     @classmethod
     def from_dict(cls, d: dict) -> "Splits":
-        return cls(**{k: tuple(v) for k, v in d.items()})
+        return cls(**{k: (tuple(v) if v is not None else None) for k, v in d.items()})
 
     def bounds(self, period: str) -> tuple[pd.Timestamp, pd.Timestamp]:
         # "2019" or "2019-06" as an end bound means the *end* of that year/month, inclusive.
@@ -42,8 +43,8 @@ def file_hash(path: str | Path) -> str:
 
 
 def guard(period: str, prereg_path: str | Path | None) -> None:
-    """Raise unless `period` is unlocked. Only 'test' and 'recent' are locked."""
-    if period not in {"test", "recent"}:
+    """Raise unless `period` is unlocked. Only 'test', 'recent' and 'forward' are locked."""
+    if period not in {"test", "recent", "forward"}:
         return
     if prereg_path is None or not Path(prereg_path).exists():
         raise TestPeriodLocked(f"'{period}' is locked: no pre-registration file found.")

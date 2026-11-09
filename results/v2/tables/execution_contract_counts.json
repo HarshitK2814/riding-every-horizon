@@ -1,0 +1,638 @@
+{
+ "2001-2017": {
+  "1e+07": {
+   "ES=F": {
+    "median_abs_contracts": 15.0,
+    "share_days_le1": 0.03637660485021398
+   },
+   "NQ=F": {
+    "median_abs_contracts": 20.0,
+    "share_days_le1": 0.03399904897765098
+   },
+   "YM=F": {
+    "median_abs_contracts": 17.0,
+    "share_days_le1": 0.038865546218487396
+   },
+   "NKD=F": {
+    "median_abs_contracts": 10.0,
+    "share_days_le1": 0.07844905320108206
+   },
+   "^STOXX50E": {
+    "median_abs_contracts": 15.0,
+    "share_days_le1": 0.04327113934100834
+   },
+   "^FTSE": {
+    "median_abs_contracts": 9.0,
+    "share_days_le1": 0.06567844925883694
+   },
+   "GC=F": {
+    "median_abs_contracts": 10.0,
+    "share_days_le1": 0.0884095757288457
+   },
+   "SI=F": {
+    "median_abs_contracts": 7.0,
+    "share_days_le1": 0.1057122540886466
+   },
+   "HG=F": {
+    "median_abs_contracts": 9.0,
+    "share_days_le1": 0.07798056411471913
+   },
+   "PL=F": {
+    "median_abs_contracts": 14.0,
+    "share_days_le1": 0.05496009122006842
+   },
+   "PA=F": {
+    "median_abs_contracts": 12.0,
+    "share_days_le1": 0.04469783352337514
+   },
+   "CL=F": {
+    "median_abs_contracts": 8.0,
+    "share_days_le1": 0.09022022259057542
+   },
+   "BZ=F": {
+    "median_abs_contracts": 7.0,
+    "share_days_le1": 0.0813141683778234
+   },
+   "NG=F": {
+    "median_abs_contracts": 6.0,
+    "share_days_le1": 0.13865844986963735
+   },
+   "HO=F": {
+    "median_abs_contracts": 7.0,
+    "share_days_le1": 0.09358669833729216
+   },
+   "RB=F": {
+    "median_abs_contracts": 6.0,
+    "share_days_le1": 0.12074748442740776
+   },
+   "ZC=F": {
+    "median_abs_contracts": 12.0,
+    "share_days_le1": 0.06563161609033169
+   },
+   "ZW=F": {
+    "median_abs_contracts": 8.0,
+    "share_days_le1": 0.11129411764705882
+   },
+   "ZS=F": {
+    "median_abs_contracts": 6.0,
+    "share_days_le1": 0.12693130496791064
+   },
+   "ZM=F": {
+    "median_abs_contracts": 8.0,
+    "share_days_le1": 0.10640279394644936
+   },
+   "ZL=F": {
+    "median_abs_contracts": 16.0,
+    "share_days_le1": 0.043809084620705555
+   },
+   "KC=F": {
+    "median_abs_contracts": 5.0,
+    "share_days_le1": 0.1646522234891676
+   },
+   "SB=F": {
+    "median_abs_contracts": 15.0,
+    "share_days_le1": 0.053406998158379376
+   },
+   "CT=F": {
+    "median_abs_contracts": 7.0,
+    "share_days_le1": 0.10034207525655645
+   },
+   "CC=F": {
+    "median_abs_contracts": 10.0,
+    "share_days_le1": 0.09828962371721779
+   },
+   "LE=F": {
+    "median_abs_contracts": 10.0,
+    "share_days_le1": 0.09290953545232274
+   },
+   "HE=F": {
+    "median_abs_contracts": 8.0,
+    "share_days_le1": 0.09415741187831965
+   },
+   "UST2": {
+    "median_abs_contracts": 63.0,
+    "share_days_le1": 0.013226909920182441
+   },
+   "UST5": {
+    "median_abs_contracts": 37.0,
+    "share_days_le1": 0.02212086659064994
+   },
+   "UST10": {
+    "median_abs_contracts": 19.0,
+    "share_days_le1": 0.04241733181299886
+   },
+   "UST20": {
+    "median_abs_contracts": 11.0,
+    "share_days_le1": 0.06978335233751426
+   },
+   "EUR": {
+    "median_abs_contracts": 6.0,
+    "share_days_le1": 0.12063854047890536
+   },
+   "JPY": {
+    "median_abs_contracts": 8.0,
+    "share_days_le1": 0.0960091220068415
+   },
+   "GBP": {
+    "median_abs_contracts": 10.0,
+    "share_days_le1": 0.06567844925883694
+   },
+   "AUD": {
+    "median_abs_contracts": 11.0,
+    "share_days_le1": 0.06431014823261118
+   },
+   "CAD": {
+    "median_abs_contracts": 12.0,
+    "share_days_le1": 0.05131128848346636
+   },
+   "CHF": {
+    "median_abs_contracts": 7.0,
+    "share_days_le1": 0.10581527936145953
+   },
+   "NZD": {
+    "median_abs_contracts": 12.0,
+    "share_days_le1": 0.05039908779931585
+   },
+   "MXN": {
+    "median_abs_contracts": 28.0,
+    "share_days_le1": 0.0314709236031927
+   }
+  },
+  "5e+07": {
+   "ES=F": {
+    "median_abs_contracts": 74.0,
+    "share_days_le1": 0.006419400855920114
+   },
+   "NQ=F": {
+    "median_abs_contracts": 99.0,
+    "share_days_le1": 0.00451735615786971
+   },
+   "YM=F": {
+    "median_abs_contracts": 86.0,
+    "share_days_le1": 0.003676470588235294
+   },
+   "NKD=F": {
+    "median_abs_contracts": 48.0,
+    "share_days_le1": 0.012022843402464683
+   },
+   "^STOXX50E": {
+    "median_abs_contracts": 73.0,
+    "share_days_le1": 0.009527590313616514
+   },
+   "^FTSE": {
+    "median_abs_contracts": 46.0,
+    "share_days_le1": 0.01573546180159635
+   },
+   "GC=F": {
+    "median_abs_contracts": 52.0,
+    "share_days_le1": 0.016117563403650153
+   },
+   "SI=F": {
+    "median_abs_contracts": 36.0,
+    "share_days_le1": 0.020858023228253142
+   },
+   "HG=F": {
+    "median_abs_contracts": 45.0,
+    "share_days_le1": 0.016828632377340603
+   },
+   "PL=F": {
+    "median_abs_contracts": 69.0,
+    "share_days_le1": 0.010946408209806158
+   },
+   "PA=F": {
+    "median_abs_contracts": 59.0,
+    "share_days_le1": 0.010718358038768529
+   },
+   "CL=F": {
+    "median_abs_contracts": 40.0,
+    "share_days_le1": 0.01657589391427895
+   },
+   "BZ=F": {
+    "median_abs_contracts": 35.0,
+    "share_days_le1": 0.01724845995893224
+   },
+   "NG=F": {
+    "median_abs_contracts": 29.0,
+    "share_days_le1": 0.032235126807300306
+   },
+   "HO=F": {
+    "median_abs_contracts": 34.0,
+    "share_days_le1": 0.019952494061757718
+   },
+   "RB=F": {
+    "median_abs_contracts": 28.0,
+    "share_days_le1": 0.021322472448490656
+   },
+   "ZC=F": {
+    "median_abs_contracts": 60.0,
+    "share_days_le1": 0.012702893436838392
+   },
+   "ZW=F": {
+    "median_abs_contracts": 39.0,
+    "share_days_le1": 0.01858823529411765
+   },
+   "ZS=F": {
+    "median_abs_contracts": 30.0,
+    "share_days_le1": 0.028286189683860232
+   },
+   "ZM=F": {
+    "median_abs_contracts": 40.0,
+    "share_days_le1": 0.024679860302677534
+   },
+   "ZL=F": {
+    "median_abs_contracts": 78.0,
+    "share_days_le1": 0.010606409960802398
+   },
+   "KC=F": {
+    "median_abs_contracts": 24.0,
+    "share_days_le1": 0.03534777651083238
+   },
+   "SB=F": {
+    "median_abs_contracts": 76.0,
+    "share_days_le1": 0.01818600368324125
+   },
+   "CT=F": {
+    "median_abs_contracts": 35.0,
+    "share_days_le1": 0.02120866590649943
+   },
+   "CC=F": {
+    "median_abs_contracts": 52.0,
+    "share_days_le1": 0.014367160775370582
+   },
+   "LE=F": {
+    "median_abs_contracts": 51.0,
+    "share_days_le1": 0.0117359413202934
+   },
+   "HE=F": {
+    "median_abs_contracts": 41.0,
+    "share_days_le1": 0.024867213906325448
+   },
+   "UST2": {
+    "median_abs_contracts": 312.0,
+    "share_days_le1": 0.00524515393386545
+   },
+   "UST5": {
+    "median_abs_contracts": 185.0,
+    "share_days_le1": 0.005473204104903079
+   },
+   "UST10": {
+    "median_abs_contracts": 96.0,
+    "share_days_le1": 0.005929304446978335
+   },
+   "UST20": {
+    "median_abs_contracts": 53.0,
+    "share_days_le1": 0.015507411630558724
+   },
+   "EUR": {
+    "median_abs_contracts": 32.0,
+    "share_days_le1": 0.021892816419612316
+   },
+   "JPY": {
+    "median_abs_contracts": 42.0,
+    "share_days_le1": 0.020752565564424175
+   },
+   "GBP": {
+    "median_abs_contracts": 51.0,
+    "share_days_le1": 0.017559863169897376
+   },
+   "AUD": {
+    "median_abs_contracts": 54.0,
+    "share_days_le1": 0.012998859749144812
+   },
+   "CAD": {
+    "median_abs_contracts": 62.0,
+    "share_days_le1": 0.01459521094640821
+   },
+   "CHF": {
+    "median_abs_contracts": 37.0,
+    "share_days_le1": 0.02234891676168757
+   },
+   "NZD": {
+    "median_abs_contracts": 58.0,
+    "share_days_le1": 0.010262257696693273
+   },
+   "MXN": {
+    "median_abs_contracts": 137.0,
+    "share_days_le1": 0.0036488027366020524
+   }
+  }
+ },
+ "2018-2026 seen": {
+  "1e+07": {
+   "ES=F": {
+    "median_abs_contracts": 6.0,
+    "share_days_le1": 0.09443954104148279
+   },
+   "NQ=F": {
+    "median_abs_contracts": 3.0,
+    "share_days_le1": 0.19020300088261252
+   },
+   "YM=F": {
+    "median_abs_contracts": 7.0,
+    "share_days_le1": 0.10547219770520741
+   },
+   "NKD=F": {
+    "median_abs_contracts": 5.0,
+    "share_days_le1": 0.14298323036187113
+   },
+   "^STOXX50E": {
+    "median_abs_contracts": 21.0,
+    "share_days_le1": 0.02030008826125331
+   },
+   "^FTSE": {
+    "median_abs_contracts": 12.0,
+    "share_days_le1": 0.04766107678729038
+   },
+   "GC=F": {
+    "median_abs_contracts": 8.0,
+    "share_days_le1": 0.12003530450132392
+   },
+   "SI=F": {
+    "median_abs_contracts": 6.0,
+    "share_days_le1": 0.2087378640776699
+   },
+   "HG=F": {
+    "median_abs_contracts": 9.0,
+    "share_days_le1": 0.06972639011473963
+   },
+   "PL=F": {
+    "median_abs_contracts": 10.0,
+    "share_days_le1": 0.09355692850838482
+   },
+   "PA=F": {
+    "median_abs_contracts": 3.0,
+    "share_days_le1": 0.29170344218887906
+   },
+   "CL=F": {
+    "median_abs_contracts": 8.0,
+    "share_days_le1": 0.08870255957634599
+   },
+   "BZ=F": {
+    "median_abs_contracts": 8.0,
+    "share_days_le1": 0.09576345984112974
+   },
+   "NG=F": {
+    "median_abs_contracts": 9.0,
+    "share_days_le1": 0.09752868490732568
+   },
+   "HO=F": {
+    "median_abs_contracts": 6.0,
+    "share_days_le1": 0.11165048543689321
+   },
+   "RB=F": {
+    "median_abs_contracts": 5.0,
+    "share_days_le1": 0.1297440423654016
+   },
+   "ZC=F": {
+    "median_abs_contracts": 15.0,
+    "share_days_le1": 0.041924095322153576
+   },
+   "ZW=F": {
+    "median_abs_contracts": 9.0,
+    "share_days_le1": 0.10061782877316858
+   },
+   "ZS=F": {
+    "median_abs_contracts": 8.0,
+    "share_days_le1": 0.10414827890556046
+   },
+   "ZM=F": {
+    "median_abs_contracts": 10.0,
+    "share_days_le1": 0.06796116504854369
+   },
+   "ZL=F": {
+    "median_abs_contracts": 14.0,
+    "share_days_le1": 0.07193292144748456
+   },
+   "KC=F": {
+    "median_abs_contracts": 4.0,
+    "share_days_le1": 0.18181818181818182
+   },
+   "SB=F": {
+    "median_abs_contracts": 18.0,
+    "share_days_le1": 0.03795233892321271
+   },
+   "CT=F": {
+    "median_abs_contracts": 9.0,
+    "share_days_le1": 0.09355692850838482
+   },
+   "CC=F": {
+    "median_abs_contracts": 7.0,
+    "share_days_le1": 0.15931156222418358
+   },
+   "LE=F": {
+    "median_abs_contracts": 10.0,
+    "share_days_le1": 0.06663724624889673
+   },
+   "HE=F": {
+    "median_abs_contracts": 7.0,
+    "share_days_le1": 0.09841129744042365
+   },
+   "UST2": {
+    "median_abs_contracts": 98.0,
+    "share_days_le1": 0.01147396293027361
+   },
+   "UST5": {
+    "median_abs_contracts": 60.0,
+    "share_days_le1": 0.01147396293027361
+   },
+   "UST10": {
+    "median_abs_contracts": 23.0,
+    "share_days_le1": 0.032215357458075904
+   },
+   "UST20": {
+    "median_abs_contracts": 9.5,
+    "share_days_le1": 0.08296557811120918
+   },
+   "EUR": {
+    "median_abs_contracts": 14.0,
+    "share_days_le1": 0.03486319505736982
+   },
+   "JPY": {
+    "median_abs_contracts": 18.0,
+    "share_days_le1": 0.026037069726390114
+   },
+   "GBP": {
+    "median_abs_contracts": 17.5,
+    "share_days_le1": 0.03486319505736982
+   },
+   "AUD": {
+    "median_abs_contracts": 19.0,
+    "share_days_le1": 0.04324801412180053
+   },
+   "CAD": {
+    "median_abs_contracts": 24.0,
+    "share_days_le1": 0.03133274492497794
+   },
+   "CHF": {
+    "median_abs_contracts": 12.0,
+    "share_days_le1": 0.05913503971756399
+   },
+   "NZD": {
+    "median_abs_contracts": 20.0,
+    "share_days_le1": 0.03309796999117388
+   },
+   "MXN": {
+    "median_abs_contracts": 50.0,
+    "share_days_le1": 0.02118270079435128
+   }
+  },
+  "5e+07": {
+   "ES=F": {
+    "median_abs_contracts": 27.5,
+    "share_days_le1": 0.01500441306266549
+   },
+   "NQ=F": {
+    "median_abs_contracts": 17.0,
+    "share_days_le1": 0.04633715798764342
+   },
+   "YM=F": {
+    "median_abs_contracts": 34.0,
+    "share_days_le1": 0.02294792586054722
+   },
+   "NKD=F": {
+    "median_abs_contracts": 25.0,
+    "share_days_le1": 0.02383053839364519
+   },
+   "^STOXX50E": {
+    "median_abs_contracts": 106.5,
+    "share_days_le1": 0.002206531332744925
+   },
+   "^FTSE": {
+    "median_abs_contracts": 61.0,
+    "share_days_le1": 0.011032656663724626
+   },
+   "GC=F": {
+    "median_abs_contracts": 38.0,
+    "share_days_le1": 0.03353927625772286
+   },
+   "SI=F": {
+    "median_abs_contracts": 28.0,
+    "share_days_le1": 0.057811120917917035
+   },
+   "HG=F": {
+    "median_abs_contracts": 43.0,
+    "share_days_le1": 0.014563106796116505
+   },
+   "PL=F": {
+    "median_abs_contracts": 51.5,
+    "share_days_le1": 0.018534863195057368
+   },
+   "PA=F": {
+    "median_abs_contracts": 16.0,
+    "share_days_le1": 0.06663724624889673
+   },
+   "CL=F": {
+    "median_abs_contracts": 38.0,
+    "share_days_le1": 0.01500441306266549
+   },
+   "BZ=F": {
+    "median_abs_contracts": 38.0,
+    "share_days_le1": 0.011915269196822596
+   },
+   "NG=F": {
+    "median_abs_contracts": 42.0,
+    "share_days_le1": 0.018534863195057368
+   },
+   "HO=F": {
+    "median_abs_contracts": 29.0,
+    "share_days_le1": 0.02559576345984113
+   },
+   "RB=F": {
+    "median_abs_contracts": 27.0,
+    "share_days_le1": 0.027802294792586054
+   },
+   "ZC=F": {
+    "median_abs_contracts": 75.0,
+    "share_days_le1": 0.001323918799646955
+   },
+   "ZW=F": {
+    "median_abs_contracts": 43.0,
+    "share_days_le1": 0.018976169461606355
+   },
+   "ZS=F": {
+    "median_abs_contracts": 39.0,
+    "share_days_le1": 0.01500441306266549
+   },
+   "ZM=F": {
+    "median_abs_contracts": 49.0,
+    "share_days_le1": 0.018093556928508385
+   },
+   "ZL=F": {
+    "median_abs_contracts": 71.0,
+    "share_days_le1": 0.013680494263018535
+   },
+   "KC=F": {
+    "median_abs_contracts": 20.0,
+    "share_days_le1": 0.025154457193292144
+   },
+   "SB=F": {
+    "median_abs_contracts": 89.0,
+    "share_days_le1": 0.007502206531332745
+   },
+   "CT=F": {
+    "median_abs_contracts": 43.0,
+    "share_days_le1": 0.01676963812886143
+   },
+   "CC=F": {
+    "median_abs_contracts": 35.5,
+    "share_days_le1": 0.02824360105913504
+   },
+   "LE=F": {
+    "median_abs_contracts": 50.0,
+    "share_days_le1": 0.016328331862312445
+   },
+   "HE=F": {
+    "median_abs_contracts": 36.0,
+    "share_days_le1": 0.02294792586054722
+   },
+   "UST2": {
+    "median_abs_contracts": 488.0,
+    "share_days_le1": 0.00264783759929391
+   },
+   "UST5": {
+    "median_abs_contracts": 296.0,
+    "share_days_le1": 0.00706090026478376
+   },
+   "UST10": {
+    "median_abs_contracts": 113.0,
+    "share_days_le1": 0.006619593998234775
+   },
+   "UST20": {
+    "median_abs_contracts": 47.0,
+    "share_days_le1": 0.015445719329214475
+   },
+   "EUR": {
+    "median_abs_contracts": 70.0,
+    "share_days_le1": 0.01588702559576346
+   },
+   "JPY": {
+    "median_abs_contracts": 91.0,
+    "share_days_le1": 0.00441306266548985
+   },
+   "GBP": {
+    "median_abs_contracts": 87.0,
+    "share_days_le1": 0.00264783759929391
+   },
+   "AUD": {
+    "median_abs_contracts": 95.0,
+    "share_days_le1": 0.011915269196822596
+   },
+   "CAD": {
+    "median_abs_contracts": 120.0,
+    "share_days_le1": 0.007502206531332745
+   },
+   "CHF": {
+    "median_abs_contracts": 60.5,
+    "share_days_le1": 0.01059135039717564
+   },
+   "NZD": {
+    "median_abs_contracts": 98.0,
+    "share_days_le1": 0.009267431597528684
+   },
+   "MXN": {
+    "median_abs_contracts": 249.5,
+    "share_days_le1": 0.003971756398940865
+   }
+  }
+ }
+}

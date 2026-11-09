@@ -1,0 +1,10 @@
+{
+ "honest": {
+  "passed": true,
+  "repr": "Lookahead diagnostics: PASS\n  [static] PASS  (non-causal=0)\n  [extension] PASS  (trades=66427, mismatched=0)\n  [truncation] PASS  (trades=27942, mismatched=0)"
+ },
+ "deliberate_lead1": {
+  "passed": false,
+  "repr": "Lookahead diagnostics: FAIL\n  [static] FAIL  (non-causal=22)\n    signal 'sig': close.lead(1), reads 1 bar ahead\n    signal 'sig': close.lead(1), reads 1 bar ahead\n    signal 'sig': close.lead(1), reads 1 bar ahead\n  [extension] PASS  (trades=66431, mismatched=0)\n  [truncation] PASS  (trades=27944, mismatched=0)"
+ }
+}

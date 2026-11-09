@@ -144,3 +144,64 @@ of Evidence on Trend-Following Investing*, JPM · Baltas & Kosowski (2013) *Mome
 Trend-Following Funds* · Politis & Romano (1994) *The Stationary Bootstrap*.
 
 *Research artifact, not investment advice.*
+
+## v2 (industry-grade upgrade)
+
+v2 asks a harder question of the same system: does the v1 result survive an overfitting audit, realistic execution
+and a test on data nobody has seen? Full numbers, all generated from files: [`research/results_v2.md`](research/results_v2.md).
+v1 above is unchanged. Pre-registration v2 hash `2d7828df5093` ([`research/preregistration_v2.md`](research/preregistration_v2.md)).
+
+**Timing.** Every signal is computed at the close of day t from data up to and including t. v1 trades at that close
+(`lag=1`); v2 also reports the realistic `lag=2` (trade at the next close).
+
+### Research -> gap -> solution
+
+| Research | Gap in v1 | v2 solution |
+|---|---|---|
+| Bailey & Lopez de Prado on backtest overfitting; Kupiec/Christoffersen VaR tests; Hawkes (1971) clustering | v1 tuned on 2001-17 with no trial-count correction; no execution or capacity model; test period used once and now seen | PBO + deflated Sharpe over a 96-config family, CPCV, GARCH vs EWMA, Hawkes test, impact/capacity, forward tracker |
+
+```mermaid
+flowchart LR
+    A["v1 blend<br/>2001-2017"] --> B["Roll-gap audit<br/>D2"]
+    A --> C["96-config family<br/>PBO, DSR, CPCV (H2)"]
+    A --> D["GARCH vs EWMA<br/>H1"]
+    A --> E["Hawkes crash clustering<br/>H3"]
+    A --> F["Lag 2 + sqrt impact<br/>capacity (D1)"]
+    A --> G["E1 conformal, E2 PySR<br/>exploratory"]
+    C & D & E & F --> H["Verdicts (prereg v2)"]
+    H --> I["Seen period 2018-2026<br/>labelled, descriptive"]
+    H --> J["Forward tracker<br/>from 2026-11"]
+```
+
+### Results (read the honest version)
+
+| Question | Verdict |
+|---|---|
+| H1: GARCH tracks the 40% risk target better than EWMA | NOT SUPPORTED |
+| H2: v1 passes PBO < 0.5 and deflated Sharpe > 0.90 | NOT SUPPORTED (PBO passes, deflated Sharpe fails) |
+| H3: crisis alpha follows crash clustering | NOT SUPPORTED |
+| E1 conformal filter, E2 PySR signal (exploratory) | no value |
+| Forward test | 0 days tracked until data exists on or after 2026-11-01; first read 2027-11 |
+
+What survives: a low PBO, stable CPCV selection paths, a realistic cost and capacity picture (capacity is small and
+Yahoo volume bounds it), and the roll-gap sensitivity. Every Sharpe, CI, rebalance count and cost assumption is in
+`research/results_v2.md`. Every 2018-2026 number there is labelled `seen period (v1 reported it)`.
+
+### Lessons
+
+* A pre-registered hypothesis failing three times in a row is the system working, not breaking.
+* GARCH on futures needs fit guards (a few instruments blow up); even guarded it does not beat EWMA here.
+* A low PBO is not evidence of an edge; it says picking within the family was stable.
+* Impact, not the 1-day lag, is what limits size.
+
+### Honesty
+
+Prereg v2 frozen before any v2 result and never edited. Choices used 2001-2017 only. The 2018-2026 re-run is
+descriptive. E1/E2 are exploratory and never headline. The ManifoldBT parity check of our engine is in
+[`qengine/PARITY.md`](../qengine/PARITY.md) and `results/v2/manifoldbt/`. Research artifact, not investment advice.
+
+### Reproduce v2
+
+```bash
+"$PY" scripts/v2/audit.py && "$PY" scripts/v2/execution.py && "$PY" scripts/v2/overfit_audit.py  && PREREG_HASH=2d7828df5093 "$PY" scripts/v2/risk_h1.py && "$PY" scripts/v2/hawkes_h3.py  && "$PY" scripts/v2/e1_conformal.py && "$PY" scripts/v2/e2_pysr.py && "$PY" scripts/v2/seen_period.py  && "$PY" scripts/v2/forward.py && "$PY" scripts/v2/make_results_v2.py
+```
