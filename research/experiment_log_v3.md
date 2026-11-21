@@ -76,3 +76,10 @@
 - Recomputed with `scripts/v3/h2_cpcv.py --from-cache` (signals from `results/v3/runs/clean_signal_cpcv.parquet`). No change to model, data or settings (2000 draws, mean block 21, seed 0). Days resampled jointly across the 5 clean paths and v1.
 - Old (averaged series): CI [-0.299, 1.162]. New (prereg statistic): mean_path_diff 0.387, CI [-0.321, 1.069], DSR 0.660 (across-path-variance sensitivity 0.830).
 - Verdict before: H2 NOT supported. After: H2 NOT supported (unchanged).
+
+## EXP-v3-005 H2 day-set alignment (2026-11-21)
+- Issues: (1) headline `clean_ann_sharpe` was the Sharpe of the 5-path averaged series, not the per-path mean its CI describes; (2) point estimate used per-path day sets (4129 days) while `days` said 4133 and the bootstrap used `pdf >= d0` rows.
+- Fix: one common day set = days from the first full feature row where all 5 paths and v1 are non-NaN (4128 days). Point estimate, bootstrap and DSR all use it. `clean_ann_sharpe`/`v1_ann_sharpe` are now path-mean / common-set values; averaged-series Sharpe kept as `clean_ann_sharpe_avg_series` (secondary). No model, data or setting change; recomputed with `--from-cache`.
+- Old: mean_path_diff 0.387, CI [-0.321, 1.069], DSR 0.660 (0.830 across-path var), days 4133, clean Sharpe 0.799 (avg series) / 0.737 (path mean), v1 0.346.
+- New: mean_path_diff 0.390, CI [-0.299, 1.075], DSR 0.687 (0.854 across-path var), days = bootstrap_n = 4128, clean Sharpe 0.741 (path mean) / 0.817 (avg series), v1 0.351.
+- Verdict before: H2 NOT supported. After: H2 NOT supported (unchanged; CI spans 0, DSR < 0.90).

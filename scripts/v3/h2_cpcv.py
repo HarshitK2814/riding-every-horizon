@@ -32,12 +32,17 @@ def ann(r) -> float:
     return sh_d(r) * np.sqrt(252)
 
 
+def common_frame(paths: pd.DataFrame, v1: pd.Series) -> pd.DataFrame:
+    """Rows where every path column and v1 are non-NaN; last column is v1. Single day set for point estimate and bootstrap."""
+    df = paths.copy(); df["__v1"] = v1.reindex(df.index)
+    return df.dropna()
+
+
 def joint_path_bootstrap(paths: pd.DataFrame, v1: pd.Series, n_boot: int = 2000, mean_block: float = 21.0, seed: int = 0):
     """Pre-registered H2(a) statistic: days resampled jointly (stationary block bootstrap) across the clean path
     columns and v1; per draw, mean over paths of (ann Sharpe(path) - ann Sharpe(v1)).
     Returns (diff_draws, clean_draws, v1_draws); clean = mean over paths of ann Sharpe."""
-    df = paths.copy(); df["__v1"] = v1.reindex(df.index)
-    df = df.dropna(subset=["__v1"])
+    df = common_frame(paths, v1)
     vals = df.to_numpy(); n = len(vals); k = vals.shape[1] - 1
     rng = np.random.default_rng(seed)
     dd, cc, vv = (np.empty(n_boot) for _ in range(3))
@@ -79,23 +84,25 @@ def main(from_cache: bool = False) -> None:
         oos_clean[tg] = net.where(s.index >= d0)             # warm-up days (no features for any split) -> NaN
     paths_clean = cpcv_paths(oos_clean, 6, 2, groups)
 
-    def pair(p):
-        return pd.DataFrame({"c": p, "v": v1.reindex(p.index)}).dropna()
-
-    diffs = [ann(pair(p)["c"]) - ann(pair(p)["v"]) for p in paths_clean]
-    joined = pd.concat(paths_clean, axis=1).mean(axis=1, skipna=True)
-    joined = joined[joined.index >= d0]
-    d_series = pd.DataFrame({"c": joined, "v": v1.reindex(joined.index)}).dropna()
     pdf = pd.concat([p.rename(i) for i, p in enumerate(paths_clean)], axis=1)
     pdf = pdf[pdf.index >= d0]
-    dd, cc, vv = joint_path_bootstrap(pdf, v1, n_boot=2000, mean_block=21)
+    common = common_frame(pdf, v1)                           # one day set: all 5 paths and v1 non-NaN
+    k = common.shape[1] - 1
+    cv = common["__v1"]
+    path_c = [ann(common[i]) for i in range(k)]
+    v1_sr = ann(cv)
+    diffs = [c - v1_sr for c in path_c]
+    d_series = pd.DataFrame({"c": common.iloc[:, :k].mean(axis=1), "v": cv})
+    n_days = len(common)
+    n_v1 = int(pdf.index.isin(v1.dropna().index).sum())
+    dd, cc, vv = joint_path_bootstrap(common.iloc[:, :k], cv, n_boot=2000, mean_block=21)
     lo, hi = percentile_ci(dd)
     draws = bootstrap_stat(d_series, lambda df: ann(df["c"]) - ann(df["v"]), n_boot=2000, mean_block=21)
     old_lo, old_hi = percentile_ci(draws)
     c_lo, c_hi = percentile_ci(cc); v_lo, v_hi = percentile_ci(vv)
     # sr_var: v2 convention = variance across the 96-config family of the per-period (daily) Sharpe
     sr_var = float(json.loads(V2_AUDIT.read_text())["sr_var_per_period"])
-    sr_var_paths = float(np.var([sh_d(p) for p in paths_clean], ddof=1))
+    sr_var_paths = float(np.var([sh_d(common[i]) for i in range(k)], ddof=1))
     dsr = float(deflated_sharpe(d_series["c"].to_numpy(), N_TRIALS, sr_var))
     dsr_paths = float(deflated_sharpe(d_series["c"].to_numpy(), N_TRIALS, sr_var_paths))
     md = float(np.mean(diffs))
@@ -104,9 +111,14 @@ def main(from_cache: bool = False) -> None:
                ci_avg_series_note="superseded: bootstrap of averaged-path series",
                dsr_clean_across_path_var=dsr_paths,
                clean_ann_sharpe_ci=[float(c_lo), float(c_hi)], v1_ann_sharpe_ci=[float(v_lo), float(v_hi)],
-               clean_ann_sharpe_path_mean=float(np.mean([ann(pair(p)["c"]) for p in paths_clean])),
-               n_trials=N_TRIALS, paths=len(paths_clean), days=int(len(d_series)),
-               clean_ann_sharpe=ann(d_series["c"]), v1_ann_sharpe=ann(d_series["v"]),
+               n_trials=N_TRIALS, paths=len(paths_clean), days=int(n_days), bootstrap_n=int(len(common)),
+               days_note=(f"common day set = days >= first full feature row where all 5 CPCV paths and v1 are non-NaN ({n_days}); "
+                          f"{n_v1 - n_days} days with v1 present but some path NaN dropped (days not covered by every path); "
+                          "previous run used per-path day sets (4129 each) for the point estimate and 4133 for the bootstrap"),
+               clean_ann_sharpe=float(np.mean(path_c)), v1_ann_sharpe=float(v1_sr),
+               headline_note="clean_ann_sharpe = mean over paths of per-path annualised Sharpe (matches its CI); v1 Sharpe on the common day set",
+               clean_ann_sharpe_avg_series=ann(d_series["c"]),
+               clean_ann_sharpe_avg_series_note="Sharpe of the 5-path averaged return series; diversified, not the prereg statistic",
                path_diffs=[float(x) for x in diffs], sr_var=sr_var, sr_var_note="v2 family variance of daily Sharpe (96 configs)",
                dsr_sensitivity_sr_var_across_paths=dsr_paths, sr_var_across_paths=sr_var_paths,
                bootstrap=dict(n_boot=2000, mean_block=21, stat="mean over paths of (ann Sharpe(clean path) - ann Sharpe(v1)); joint day resampling"),
@@ -120,9 +132,9 @@ def main(from_cache: bool = False) -> None:
     tbl = pd.DataFrame({"path": range(len(diffs)), "period": "2001-2017 CPCV",
                         "label": "contaminated-free model; seen period for researcher",
                         "signal_bar": "close t, trade t+1", "costs": "v1 cost_bp + roll",
-                        "days": [len(pair(p)) for p in paths_clean],
-                        "clean_ann_sharpe": [ann(pair(p)["c"]) for p in paths_clean],
-                        "v1_ann_sharpe": [ann(pair(p)["v"]) for p in paths_clean],
+                        "days": n_days,
+                        "clean_ann_sharpe": path_c,
+                        "v1_ann_sharpe": v1_sr,
                         "clean_minus_v1_sharpe": diffs})
     tbl.to_csv(OUT_T / "h2_cpcv_paths.csv", index=False)
     if not from_cache:

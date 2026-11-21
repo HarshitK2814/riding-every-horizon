@@ -28,3 +28,17 @@ def test_joint_bootstrap_detects_drift():
     paths = pd.DataFrame({i: v1 + 0.002 + rng.normal(0, 0.0005, len(v1)) for i in range(5)})
     dd, _, _ = h2.joint_path_bootstrap(paths, v1, n_boot=200)
     assert np.quantile(dd, 0.025) > 0
+
+
+def test_common_day_set_with_staggered_nans():
+    v1 = _v1(600)
+    rng = np.random.default_rng(2)
+    paths = pd.DataFrame({i: v1 + 0.001 + rng.normal(0, 0.004, len(v1)) for i in range(3)})
+    paths.iloc[10:30, 0] = np.nan; paths.iloc[100:110, 1] = np.nan; paths.iloc[500:520, 2] = np.nan
+    v1n = v1.copy(); v1n.iloc[:5] = np.nan
+    manual = paths.copy(); manual["__v1"] = v1n; manual = manual.dropna()
+    assert len(h2.common_frame(paths, v1n)) == len(manual) < len(paths) - 5
+    got = h2.joint_path_bootstrap(paths, v1n, n_boot=100, seed=3)
+    exp = h2.joint_path_bootstrap(manual.iloc[:, :3], manual["__v1"], n_boot=100, seed=3)
+    for g, e in zip(got, exp):
+        assert np.array_equal(g, e)
