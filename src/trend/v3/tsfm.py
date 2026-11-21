@@ -19,13 +19,16 @@ class Forecaster(Protocol):
 class TimesFMForecaster:
     MODEL_ID = "google/timesfm-2.5-200m-pytorch"
 
-    def __init__(self, max_context: int = 1024, max_horizon: int = 256):
+    def __init__(self, max_context: int = 1024, max_horizon: int = 256, per_core_batch_size: int = 256):
         import timesfm
         import torch
         torch.set_float32_matmul_precision("high")
+        self.max_horizon = max_horizon
+        self.per_core_batch_size = per_core_batch_size
         self.m = timesfm.TimesFM_2p5_200M_torch.from_pretrained(self.MODEL_ID)
         self.m.compile(timesfm.ForecastConfig(
-            max_context=max_context, max_horizon=max_horizon, normalize_inputs=True,
+            max_context=max_context, max_horizon=max_horizon, per_core_batch_size=per_core_batch_size,
+            normalize_inputs=True,
             use_continuous_quantile_head=True, force_flip_invariance=True,
             infer_is_positive=False, fix_quantile_crossing=True))
 
@@ -48,6 +51,9 @@ def forecast_panel(R: pd.DataFrame, dates: pd.DatetimeIndex, fc: Forecaster, hor
     started = R.notna().cumsum() > 0
     idx_level = lr.fillna(0.0).where(started).cumsum()
     hmax = max(horizons.values())
+    cap = getattr(fc, "max_horizon", None)
+    if cap is not None and hmax > cap:
+        raise ValueError(f"max horizon {hmax} exceeds forecaster capacity {cap}")
     jobs = []                                   # (date, inst, context array)
     for d in dates:
         hist = idx_level.loc[:d]                # point in time: nothing after close d
@@ -59,6 +65,10 @@ def forecast_panel(R: pd.DataFrame, dates: pd.DatetimeIndex, fc: Forecaster, hor
     for i in range(0, len(jobs), batch):
         chunk = jobs[i:i + batch]
         point, quant = fc.forecast([c for _, _, c in chunk], hmax)
+        point, quant = np.asarray(point), np.asarray(quant)
+        if point.shape != (len(chunk), hmax) or quant.shape != (len(chunk), hmax, 10):
+            raise ValueError(f"forecaster output shape mismatch: point {point.shape} (expected {(len(chunk), hmax)}), "
+                             f"quant {quant.shape} (expected {(len(chunk), hmax, 10)}; channel 0 = mean, 1..9 = q10..q90)")
         for j, (d, inst, c) in enumerate(chunk):
             for name, h in horizons.items():
                 mu = float(point[j, h - 1] - c[-1])

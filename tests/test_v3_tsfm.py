@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pytest
 
 from trend.v3.tsfm import forecast_panel, schedule, tstat_signal
 
@@ -56,3 +57,42 @@ def test_min_obs_skips_young_instrument():
     out = forecast_panel(R, pd.DatetimeIndex([R.index[400]]), DriftForecaster(), {"short": 21}, min_obs=256)
     assert set(out["inst"]) == {"A", "B"}            # C has only 101 obs at index 400
     assert list(out.columns) == ["date", "inst", "horizon", "mu", "width", "sig"]
+
+
+class NineQuantiles:
+    def forecast(self, contexts, horizon):
+        n = len(contexts)
+        return np.zeros((n, horizon)), np.zeros((n, horizon, 9))
+
+
+class Capped(DriftForecaster):
+    max_horizon = 32
+
+
+def test_wrong_quantile_layout_raises():
+    R = _panel()
+    with pytest.raises(ValueError, match="shape mismatch"):
+        forecast_panel(R, pd.DatetimeIndex([R.index[400]]), NineQuantiles(), {"short": 21})
+
+
+def test_horizon_over_capacity_raises():
+    R = _panel()
+    with pytest.raises(ValueError, match="capacity"):
+        forecast_panel(R, pd.DatetimeIndex([R.index[400]]), Capped(), {"long": 63})
+
+
+def test_multiple_horizons_two_rows_per_date_inst():
+    R = _panel()
+    out = forecast_panel(R, pd.DatetimeIndex([R.index[400]]), DriftForecaster(), {"short": 21, "medium": 63})
+    assert len(out) == 2 * 2                      # A, B x two horizons
+    assert out.groupby(["date", "inst"]).size().eq(2).all()
+    assert set(out["horizon"]) == {"short", "medium"}
+
+
+def test_batch_boundary_matches_single_batch():
+    R = _panel()
+    R.iloc[:, 2] = R.iloc[:, 1].to_numpy()        # make all 3 instruments eligible
+    d = pd.DatetimeIndex([R.index[400], R.index[450]])
+    a = forecast_panel(R, d, DriftForecaster(), {"short": 21, "medium": 63}, batch=2)
+    b = forecast_panel(R, d, DriftForecaster(), {"short": 21, "medium": 63}, batch=512)
+    pd.testing.assert_frame_equal(a, b)
