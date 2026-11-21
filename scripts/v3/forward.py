@@ -1,9 +1,11 @@
 """P7 v3 forward tracker (H1). Books v1_blend, tsfm_blend, clean_blend. Signal at close t, traded at the next
 close (lag 2, as v2), v1 costs, no impact. Writes only dates in the v3 'forward' split (locked by the v3 prereg
 hash). Idempotent.
-Usage: python scripts/v3/forward.py [--refresh]
---refresh: re-download data (v1 functions), extend the TimesFM cache (CPU ok), and recompute clean signals from the
-frozen model results/v3/cache/clean_model.pt (never retrained). Without it, data and caches on disk are used."""
+Usage: python scripts/v3/forward.py [--refresh | --refresh-signals]
+--refresh: re-download data (v1 functions), then as --refresh-signals.
+--refresh-signals: no download; extend the TimesFM cache (auto device: GPU if present, else CPU) and recompute clean
+signals from the frozen model results/v3/cache/clean_model.pt (never retrained).
+Without either, data and caches on disk are used."""
 from __future__ import annotations
 
 import os
@@ -29,15 +31,17 @@ CACHE = ROOT / "results" / "v3" / "cache"
 sys.path.insert(0, str(ROOT / "scripts" / "v3"))
 
 
-def main(refresh: bool = False) -> int:
+def main(refresh: bool = False, refresh_signals: bool = False) -> int:
     if refresh:
         data.download(); data.build(); macro.download_macro()
+    refresh_signals = refresh or refresh_signals
+    if refresh_signals:
         import forecast_tsfm
-        forecast_tsfm.main(cpu=True)
+        forecast_tsfm.main()
     os.environ.setdefault("PREREG_HASH", file_hash(PREREG))
     inp = load_inputs(ROOT)
     tsfm_long = pd.read_parquet(CACHE / "tsfm_signal.parquet")
-    if refresh:
+    if refresh_signals:
         clean = clean_predict(CACHE / "clean_model.pt", model.prepare(inp["R"]))
         clean.to_parquet(CACHE / "clean_signal_full.parquet")
     else:
@@ -58,4 +62,4 @@ def main(refresh: bool = False) -> int:
 
 
 if __name__ == "__main__":
-    main("--refresh" in sys.argv)
+    main("--refresh" in sys.argv, "--refresh-signals" in sys.argv)

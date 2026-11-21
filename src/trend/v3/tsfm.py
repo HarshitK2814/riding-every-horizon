@@ -19,13 +19,23 @@ class Forecaster(Protocol):
 class TimesFMForecaster:
     MODEL_ID = "google/timesfm-2.5-200m-pytorch"
 
-    def __init__(self, max_context: int = 1024, max_horizon: int = 256, per_core_batch_size: int = 256):
+    def __init__(self, max_context: int = 1024, max_horizon: int = 256, per_core_batch_size: int = 256,
+                 device: str | None = None):
+        """device None = auto (GPU if available); "cpu" forces CPU (set on the model before compile)."""
         import timesfm
         import torch
         torch.set_float32_matmul_precision("high")
         self.max_horizon = max_horizon
         self.per_core_batch_size = per_core_batch_size
         self.m = timesfm.TimesFM_2p5_200M_torch.from_pretrained(self.MODEL_ID)
+        if device == "cpu":
+            # The inner model chose its device at construction. Make device and device_count consistent BEFORE
+            # compile, which computes global_batch_size = per_core_batch_size * model.device_count.
+            self.m.model.to(torch.device("cpu"))
+            self.m.model.device = torch.device("cpu")
+            self.m.model.device_count = 1
+        elif device is not None:
+            raise ValueError(f"device must be None or 'cpu', got {device!r}")
         self.m.compile(timesfm.ForecastConfig(
             max_context=max_context, max_horizon=max_horizon, per_core_batch_size=per_core_batch_size,
             normalize_inputs=True,
@@ -43,6 +53,13 @@ def tstat_signal(mu: np.ndarray, width: np.ndarray) -> np.ndarray:
 
 def schedule(index: pd.DatetimeIndex, every: int = 5) -> pd.DatetimeIndex:
     return index[::every]
+
+
+def extend_schedule(index: pd.DatetimeIndex, last_cached, every: int = 5) -> pd.DatetimeIndex:
+    """New forecast dates after the last cached date: positions +every, +2*every, ... in `index` after it, so the
+    spacing stays exactly `every` trading days whatever the panel's first date is."""
+    after = index[index > last_cached]
+    return after[every - 1::every]
 
 
 def forecast_panel(R: pd.DataFrame, dates: pd.DatetimeIndex, fc: Forecaster, horizons: dict[str, int],

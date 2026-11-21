@@ -101,3 +101,10 @@ The H2 deflated Sharpe (EXP-v3-003 to 005) is computed on the 5-path averaged da
 - Added assert: engine lag-1 net for v1_blend equals model.backtest net within 1e-10. Passed.
 - Results note: crisis and capacity tables have no Sharpe CI (cumulative return / capacity); full rerun trains on CUDA, may not be bit-identical, committed cache is the reference.
 - No model, signal or setting changed. Rerun with TREND_QUICK=1; summary_by_period.csv byte-identical.
+
+## EXP-v3-009 forward pipeline live check (2026-11-21)
+- Bug: `forward.py --refresh` called `forecast_tsfm.main(cpu=True)`, which set CUDA_VISIBLE_DEVICES="" after torch had already initialised CUDA. timesfm then saw `cuda.is_available()` True but `device_count()` 0, so `global_batch_size = per_core_batch_size * 0 = 0` and `forecast()` failed `assert global_batch_size > 0`.
+- Fix: `TimesFMForecaster(device=...)`; "cpu" moves the inner model to CPU and sets its device/device_count before `compile`. `forecast_tsfm.main(cpu=)` passes device; no env var. `forward.py` uses auto device. New `--refresh-signals` (no download). Cache extension now anchored on the last cached date (`extend_schedule`: +5, +10, ... trading days), not R.index[0].
+- Test: RUN_TSFM_TESTS=1 `test_timesfm_cpu_forecast_shapes` passed (11 passed in tests/test_v3_tsfm.py, 10.5 s); full suite 49 passed, 1 skipped.
+- Live `forward.py --refresh`: "forecast dates added 5, rows 153579, last 2026-11-17"; "data ends 2026-11-20; forward start 2026-12; new rows 0". Then `forecast_tsfm.py --cpu`: "cache up to date".
+- Note: the re-download changed history. clean_signal_full.parquet (frozen model, unchanged) differs from the committed copy on 35 of 2266 old dates (max abs 0.23, MXN), 2018-01-17 to 2026-10-13, so the source data (Yahoo/FRED) was revised. Old tsfm rows are unchanged (cache is append-only). No forward row is affected (forward starts 2026-12-01).

@@ -1,8 +1,11 @@
+import importlib.util
+import os
+
 import numpy as np
 import pandas as pd
 import pytest
 
-from trend.v3.tsfm import forecast_panel, schedule, tstat_signal
+from trend.v3.tsfm import TimesFMForecaster, extend_schedule, forecast_panel, schedule, tstat_signal
 
 
 class DriftForecaster:
@@ -96,3 +99,26 @@ def test_batch_boundary_matches_single_batch():
     a = forecast_panel(R, d, DriftForecaster(), {"short": 21, "medium": 63}, batch=2)
     b = forecast_panel(R, d, DriftForecaster(), {"short": 21, "medium": 63}, batch=512)
     pd.testing.assert_frame_equal(a, b)
+
+
+def test_extend_schedule_anchors_on_cache_not_first_date():
+    old_idx = pd.bdate_range("2010-01-01", periods=100)
+    last = schedule(old_idx, 5)[-1]
+    new_idx = pd.bdate_range("2010-01-11", periods=120)       # different first date
+    got = extend_schedule(new_idx, last, 5)
+    pos = new_idx.get_loc(last)
+    assert list(got) == [new_idx[pos + 5 * k] for k in range(1, len(got) + 1)]
+    assert len(got) == (len(new_idx) - 1 - pos) // 5
+    assert len(extend_schedule(new_idx, new_idx[-1], 5)) == 0
+
+
+@pytest.mark.skipif(os.environ.get("RUN_TSFM_TESTS") != "1" or importlib.util.find_spec("timesfm") is None,
+                    reason="slow: set RUN_TSFM_TESTS=1 (needs timesfm + weights)")
+def test_timesfm_cpu_forecast_shapes():
+    fc = TimesFMForecaster(max_context=256, max_horizon=64, per_core_batch_size=4, device="cpu")
+    assert fc.m.global_batch_size == 4
+    rng = np.random.default_rng(0)
+    ctx = [np.cumsum(rng.normal(0, 0.01, 300)), np.cumsum(rng.normal(0, 0.01, 200))]
+    point, quant = fc.forecast(ctx, 21)
+    assert point.shape == (2, 21) and quant.shape == (2, 21, 10)
+    assert np.isfinite(point).all() and np.isfinite(quant).all()
