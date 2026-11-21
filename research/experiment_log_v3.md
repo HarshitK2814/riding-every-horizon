@@ -86,3 +86,10 @@
 
 ## EXP-v3-006 DSR series note (2026-11-21)
 The H2 deflated Sharpe (EXP-v3-003 to 005) is computed on the 5-path averaged daily return series over the common day set (Sharpe 0.817 ann.), not on the per-path mean (0.741). The averaged series has the higher Sharpe, so this choice favours clean_blend; it still fails the 0.90 bar (0.687). No number changed.
+
+## EXP-v3-007 results run: books, E1-E3, results_v3.md (2026-11-21)
+- Ran `scripts/v3/make_results_v3.py` once (no crash, nothing tuned). Books: v1_blend, v1_weekly (v1 signal refreshed every 5 days), tsfm_blend (cached TimesFM signal, held <= 5 days), clean_blend (MLP trained once on 2001-2017, seed 0, 20 epochs, applied from 2018; training rows within 252 days of 2017-12-31 dropped so no target uses post-2017 returns; `clean_full_signal` in `trend/v3/clean_model.py`). Signal at close t, trade t+1; v1 costs + roll.
+- Descriptive/exploratory only. TimesFM rows before 2025-10-01 `contaminated` (`+seen` from 2018). H1 pending (first read 2027-11-30). Nothing is out-of-sample.
+- Deviation: the panel has 39 instruments; the preregistration says "37-market" (v1 wording). Nothing changed because of it.
+- Choices not in the brief: (a) `recent` period also reported split at 2025-10-01; (b) E2 "clean" hit rate uses the clean MLP short-horizon head (per-horizon predictions cached in `clean_pred_full.parquet`), not the blend; (c) E3 cost x2 and capacity use 2018-01..2026-10 (capacity: lag 2, v2 `execution.py` pattern and both ADV variants); (d) each book starts on its first non-zero-weight day.
+- Re-run with TREND_QUICK=1 (cached clean signal) reproduced the four CSVs byte-for-byte.

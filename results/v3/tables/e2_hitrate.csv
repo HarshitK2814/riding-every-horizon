@@ -1,0 +1,13 @@
+signal,band,label,n_obs,hit_rate,wilson_lo,wilson_hi,signal_bar,note
+tsfm_short,pre-2018 (contaminated),contaminated,33201,0.5113099003042078,0.5059319110803094,0.5166852725535377,"close t, forecast t+1..t+21",obs overlap and are cross-correlated: CI too narrow
+tsfm_short,2018-01..2025-09 (contaminated+seen),contaminated+seen,15600,0.5217948717948718,0.5139516473857461,0.5296273645929451,"close t, forecast t+1..t+21",obs overlap and are cross-correlated: CI too narrow
+tsfm_short,"2025-10..2026-09 (seen, after cutoff)","seen, after cutoff",1911,0.49973835688121404,0.4773434423126084,0.5221343212789075,"close t, forecast t+1..t+21",obs overlap and are cross-correlated: CI too narrow
+tsfm_short,all before 2025-10-01 (contaminated),contaminated,48801,0.5146615848035901,0.5102263066505944,0.5190945548272144,"close t, forecast t+1..t+21",obs overlap and are cross-correlated: CI too narrow
+clean_short,pre-2018 (contaminated),contaminated,0,,,,"close t, forecast t+1..t+21",obs overlap and are cross-correlated: CI too narrow
+clean_short,2018-01..2025-09 (contaminated+seen),contaminated+seen,15600,0.5246153846153846,0.5167735214393574,0.532445127383635,"close t, forecast t+1..t+21",obs overlap and are cross-correlated: CI too narrow
+clean_short,"2025-10..2026-09 (seen, after cutoff)","seen, after cutoff",1911,0.5096807953950812,0.48727012068725595,0.5320526264266568,"close t, forecast t+1..t+21",obs overlap and are cross-correlated: CI too narrow
+clean_short,all before 2025-10-01 (contaminated),contaminated,15600,0.5246153846153846,0.5167735214393574,0.532445127383635,"close t, forecast t+1..t+21",obs overlap and are cross-correlated: CI too narrow
+v1_sign_short,pre-2018 (contaminated),contaminated,34099,0.4979324906888765,0.4926259925197284,0.5032394546575532,"close t, forecast t+1..t+21",obs overlap and are cross-correlated: CI too narrow
+v1_sign_short,2018-01..2025-09 (contaminated+seen),contaminated+seen,15600,0.4980769230769231,0.49023214092722056,0.5059226521334833,"close t, forecast t+1..t+21",obs overlap and are cross-correlated: CI too narrow
+v1_sign_short,"2025-10..2026-09 (seen, after cutoff)","seen, after cutoff",1911,0.4620617477760335,0.4398068492012406,0.4844688715685609,"close t, forecast t+1..t+21",obs overlap and are cross-correlated: CI too narrow
+v1_sign_short,all before 2025-10-01 (contaminated),contaminated,49699,0.49797782651562406,0.4935822436429789,0.5023737219813286,"close t, forecast t+1..t+21",obs overlap and are cross-correlated: CI too narrow
