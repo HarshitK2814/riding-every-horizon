@@ -1,6 +1,6 @@
-path,clean_minus_v1_sharpe
-0,0.05646801994537498
-1,0.402351025467672
-2,0.32023902103329455
-3,0.516011907407028
-4,0.6419006077347533
+path,period,label,signal_bar,costs,days,clean_ann_sharpe,v1_ann_sharpe,clean_minus_v1_sharpe
+0,2001-2017 CPCV,contaminated-free model; seen period for researcher,"close t, trade t+1",v1 cost_bp + roll,4129,0.4031485260971664,0.3466805061517914,0.05646801994537498
+1,2001-2017 CPCV,contaminated-free model; seen period for researcher,"close t, trade t+1",v1 cost_bp + roll,4129,0.7564644679300524,0.3541134424623804,0.402351025467672
+2,2001-2017 CPCV,contaminated-free model; seen period for researcher,"close t, trade t+1",v1 cost_bp + roll,4129,0.669627002209132,0.3493879811758374,0.32023902103329455
+3,2001-2017 CPCV,contaminated-free model; seen period for researcher,"close t, trade t+1",v1 cost_bp + roll,4129,0.8661660049325968,0.35015409752556886,0.516011907407028
+4,2001-2017 CPCV,contaminated-free model; seen period for researcher,"close t, trade t+1",v1 cost_bp + roll,4129,0.990796439707068,0.34889583197231466,0.6419006077347533

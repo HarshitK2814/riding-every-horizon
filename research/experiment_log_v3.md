@@ -69,3 +69,10 @@
   "note": "2001-2017 CPCV (6 groups, 2 test, purge 252, embargo 21); signal close t, trade t+1; v1 costs and rolls; not out-of-sample for the researcher; costs/slippage as v1, capacity not assessed. Warm-up days before first full feature row excluded for both books. Design bias: in each split the clean book holds zero positions outside its test groups, so entering a test group incurs entry turnover cost while v1 trades continuously; this is a conservative bias against the clean book."
 }
 ```
+
+## EXP-v3-004 H2 statistic correction (2026-11-21)
+- The unheaded "Correction" line after EXP-v3-002 (1434 vs 1383 forecast dates) refers to EXP-v3-002.
+- Review found the EXP-v3-003 CI was computed on a different statistic than the prereg wording: it bootstrapped the Sharpe difference of the path-averaged return series, not the mean over paths of (clean - v1) Sharpe.
+- Recomputed with `scripts/v3/h2_cpcv.py --from-cache` (signals from `results/v3/runs/clean_signal_cpcv.parquet`). No change to model, data or settings (2000 draws, mean block 21, seed 0). Days resampled jointly across the 5 clean paths and v1.
+- Old (averaged series): CI [-0.299, 1.162]. New (prereg statistic): mean_path_diff 0.387, CI [-0.321, 1.069], DSR 0.660 (across-path-variance sensitivity 0.830).
+- Verdict before: H2 NOT supported. After: H2 NOT supported (unchanged).
