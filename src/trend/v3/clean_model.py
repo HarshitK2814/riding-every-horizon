@@ -46,9 +46,8 @@ class CleanNet(nn.Module):
         return self.net(x)
 
 
-def fit_predict(X_train: pd.DataFrame, Y_train: pd.DataFrame, X_test: pd.DataFrame, seed: int = 0,
-                epochs: int = 20, device: str | None = None) -> pd.DataFrame:
-    device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+def _fit(X_train: pd.DataFrame, Y_train: pd.DataFrame, seed: int, epochs: int, device: str) -> dict:
+    """Train the MLP; return everything needed to predict later (state, feature mean/sd, output scale)."""
     torch.manual_seed(seed); np.random.seed(seed)
     idx = X_train.index.intersection(Y_train.index)
     xt = torch.tensor(X_train.loc[idx].to_numpy(np.float32), device=device)
@@ -66,9 +65,24 @@ def fit_predict(X_train: pd.DataFrame, Y_train: pd.DataFrame, X_test: pd.DataFra
     net.eval()
     with torch.no_grad():
         scale = net((xt - mu) / sd).std(0) + 1e-6
-        xs = torch.tensor(X_test.to_numpy(np.float32), device=device)
+    return {"state": {k: v.detach().cpu() for k, v in net.state_dict().items()}, "mu": mu.cpu(), "sd": sd.cpu(),
+            "scale": scale.cpu(), "cols_in": list(X_train.columns), "cols_out": list(Y_train.columns)}
+
+
+def _apply(m: dict, X_test: pd.DataFrame, device: str) -> pd.DataFrame:
+    net = CleanNet(len(m["cols_in"]), len(m["cols_out"])).to(device)
+    net.load_state_dict(m["state"]); net.eval()
+    mu, sd, scale = (m[k].to(device) for k in ("mu", "sd", "scale"))
+    with torch.no_grad():
+        xs = torch.tensor(X_test[m["cols_in"]].to_numpy(np.float32), device=device)
         p = torch.tanh(net((xs - mu) / sd) / scale).cpu().numpy()
-    return pd.DataFrame(p, index=X_test.index, columns=Y_train.columns)
+    return pd.DataFrame(p, index=X_test.index, columns=m["cols_out"])
+
+
+def fit_predict(X_train: pd.DataFrame, Y_train: pd.DataFrame, X_test: pd.DataFrame, seed: int = 0,
+                epochs: int = 20, device: str | None = None) -> pd.DataFrame:
+    device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+    return _apply(_fit(X_train, Y_train, seed, epochs, device), X_test, device)
 
 
 def clean_signal(pred: pd.DataFrame) -> pd.DataFrame:
@@ -89,15 +103,34 @@ def _train_xy(R: pd.DataFrame, train_end: str, horizons: dict[str, int] = H_DEFA
     return keep(X), keep(Y)
 
 
+def _test_features(R: pd.DataFrame, train_end: str) -> pd.DataFrame:
+    X = features(R)
+    return X[X.index.get_level_values(0) > pd.Timestamp(train_end)].dropna()
+
+
 def clean_full_pred(R: pd.DataFrame, train_end: str = "2017-12-31", seed: int = 0, epochs: int = 20) -> pd.DataFrame:
     """Per-horizon predictions (index date x inst, columns short/medium/long) for all dates after train_end."""
     Xtr, Ytr = _train_xy(R, train_end)
-    X = features(R)
-    Xte = X[X.index.get_level_values(0) > pd.Timestamp(train_end)].dropna()
-    return fit_predict(Xtr, Ytr, Xte, seed=seed, epochs=epochs)
+    return fit_predict(Xtr, Ytr, _test_features(R, train_end), seed=seed, epochs=epochs)
 
 
 def clean_full_signal(R: pd.DataFrame, train_end: str = "2017-12-31", seed: int = 0, epochs: int = 20) -> pd.DataFrame:
     """Clean MLP trained once on data up to train_end ("trained pre-2018"); signal for all dates after it
     (date x inst), known at close t."""
     return clean_signal(clean_full_pred(R, train_end, seed, epochs))
+
+
+def save_clean_model(path, R: pd.DataFrame, train_end: str = "2017-12-31", seed: int = 0, epochs: int = 20,
+                     device: str | None = None) -> None:
+    """Train exactly as clean_full_signal does and freeze the model to `path` (.pt) for retrain-free prediction."""
+    device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+    Xtr, Ytr = _train_xy(R, train_end)
+    m = _fit(Xtr, Ytr, seed, epochs, device)
+    m.update(train_end=train_end, seed=seed, epochs=epochs)
+    torch.save(m, path)
+
+
+def clean_predict(path, R: pd.DataFrame, device: str = "cpu") -> pd.DataFrame:
+    """Signal (date x inst) for dates > train_end from the frozen model at `path`. Never retrains."""
+    m = torch.load(path, map_location="cpu", weights_only=False)
+    return clean_signal(_apply(m, _test_features(R, m["train_end"]), device))

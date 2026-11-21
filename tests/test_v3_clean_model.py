@@ -85,3 +85,21 @@ def test_clean_full_signal_is_point_in_time_and_deterministic():
     pd.testing.assert_frame_equal(a.loc[:R.index[699]], b.loc[:R.index[699]])
     c = clean_full_signal(R, train_end=te, epochs=2)
     pd.testing.assert_frame_equal(a, c)
+
+
+def test_clean_predict_roundtrip_matches_full_signal_and_is_point_in_time(tmp_path):
+    from trend.v3.clean_model import clean_predict, save_clean_model
+    R = _R(900)
+    te = str(R.index[600].date())
+    p = tmp_path / "m.pt"
+    save_clean_model(p, R, train_end=te, epochs=2, device="cpu")
+    a = clean_predict(p, R)
+    assert a.index.min() > pd.Timestamp(te)
+    from trend.v3.clean_model import _test_features, _train_xy
+    Xtr, Ytr = _train_xy(R, te)
+    full = clean_signal(fit_predict(Xtr, Ytr, _test_features(R, te), epochs=2, device="cpu"))
+    assert a.index.equals(full.index)
+    assert float((a - full).abs().max().max()) < 1e-4
+    R2 = R.copy(); R2.iloc[700:] = 0.2
+    b = clean_predict(p, R2)
+    pd.testing.assert_frame_equal(a.loc[:R.index[699]], b.loc[:R.index[699]])
