@@ -108,14 +108,14 @@
       </dl>
       <figure class="chart">
         <div id="equity" role="img" aria-label="Growth of 1 unit, log scale, with data-label bands"></div>
-        <figcaption>Growth of 1, log scale, net of costs. Bands: <span class="sw sw-c"></span>contaminated
+        <figcaption>Growth of 1, log scale, net of costs, including T-bill interest; Sharpe is on excess-of-cash returns. Bands: <span class="sw sw-c"></span>contaminated
           (TimesFM may have trained on it) <span class="sw sw-cs"></span>contaminated + seen
           <span class="sw sw-s"></span>seen <span class="sw sw-f"></span>forward (confirmatory; not in this
           data vintage).</figcaption>
       </figure>
       <p class="check" id="refcheck"></p>
-      <table class="crisis" aria-label="Crisis windows, cumulative net return">
-        <thead><tr><th scope="col">Crisis window</th><th scope="col" class="dates">Dates</th><th scope="col" class="n">Days</th><th scope="col" class="n">Net return</th></tr></thead>
+      <table class="crisis" aria-label="Crisis windows, cumulative net return including T-bill">
+        <thead><tr><th scope="col">Crisis window</th><th scope="col" class="dates">Dates</th><th scope="col" class="n">Days</th><th scope="col" class="n">Net return incl. T-bill (as in the paper)</th></tr></thead>
         <tbody id="crisis"></tbody>
       </table>
     </div>

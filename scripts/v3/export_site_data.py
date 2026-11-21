@@ -150,6 +150,14 @@ def main() -> None:
     _gz_csv(R, OUT / "returns.csv.gz")
     sig = signal_frame(pd.read_parquet(ROOT / "results/v3/cache/tsfm_signal.parquet"), model.prepare(R).index)
     _gz_csv(sig, OUT / "tsfm_signal.csv.gz")
+    # daily T-bill return exactly as scripts/figures.py: FRED DTB3 / 100 / 252 from the snapshot vintage,
+    # reindexed to the returns index, forward-filled, 0 before the first quote
+    y = pd.read_parquet(ROOT / "snapshot" / "raw" / "dtb3.parquet")["DTB3"] / 100
+    rf = (y / 252).reindex(R.index).ffill().fillna(0.0)
+    buf = io.StringIO()
+    rf.rename("rf").to_csv(buf, float_format="%.9f", date_format="%Y-%m-%d", index_label="date")
+    with gzip.GzipFile(OUT / "tbill.csv.gz", "wb", compresslevel=9, mtime=0) as f:
+        f.write(buf.getvalue().encode())
     _dump({t: dict(sector=r.sector, cost_bp=float(r.cost_bp), rolls=int(r.rolls)) for t, r in inst.iterrows()},
           "instruments.json")
     _dump(verdicts(), "verdicts.json")

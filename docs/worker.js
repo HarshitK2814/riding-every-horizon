@@ -10,7 +10,7 @@ const post = (m) => self.postMessage(m);
 
 async function bytes(url) {
   const r = await fetch(url);
-  if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
+  if (!r.ok) throw new Error(`Could not load ${url} (HTTP ${r.status})`);
   return new Uint8Array(await r.arrayBuffer());
 }
 
@@ -20,19 +20,26 @@ async function boot() {
   post({ type: "stage", stage: "packages", detail: "numpy, pandas" });
   await py.loadPackage(["numpy", "pandas"]);
   post({ type: "stage", stage: "data", detail: "39 instruments, 1999-2026" });
-  const [src, ret, inst, sig] = await Promise.all([
-    fetch("trend_lite.py").then((r) => r.text()),
+  const text = async (url) => {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`Could not load ${url} (HTTP ${r.status})`);
+    return r.text();
+  };
+  const [src, ret, inst, sig, rf] = await Promise.all([
+    text("trend_lite.py"),
     bytes("data/returns.csv.gz"),
-    fetch("data/instruments.json").then((r) => r.text()),
+    text("data/instruments.json"),
     bytes("data/tsfm_signal.csv.gz"),
+    bytes("data/tbill.csv.gz"),
   ]);
   py.FS.writeFile("/home/pyodide/trend_lite.py", src);
   py.FS.writeFile("/tmp/returns.csv.gz", ret);
   py.FS.writeFile("/tmp/tsfm_signal.csv.gz", sig);
+  py.FS.writeFile("/tmp/tbill.csv.gz", rf);
   py.globals.set("INST_JSON", inst);
   py.runPython(`
 import trend_lite as tl
-INP = tl.load_inputs(open("/tmp/returns.csv.gz", "rb").read(), INST_JSON, open("/tmp/tsfm_signal.csv.gz", "rb").read())
+INP = tl.load_inputs(open("/tmp/returns.csv.gz", "rb").read(), INST_JSON, open("/tmp/tsfm_signal.csv.gz", "rb").read(), open("/tmp/tbill.csv.gz", "rb").read())
 CACHE = {}
 `);
   post({ type: "ready" });

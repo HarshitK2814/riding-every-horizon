@@ -25,7 +25,7 @@
   ];
   const PILL = { supported: "supported", not_supported: "not supported", pending: "pending" };
 
-  let META = null, last = null, lastDefault = false, sentDefault = new Map(), worker = null, ready = false, inflight = false, queued = null, seq = 0, timer = null;
+  let META = null, last = null, lastDefault = false, lastDisjoint = false, sentDefault = new Map(), worker = null, ready = false, inflight = false, queued = null, seq = 0, timer = null;
 
   function nextDay(d) { const t = new Date(d + "T00:00:00Z"); t.setUTCDate(t.getUTCDate() + 1); return t.toISOString().slice(0, 10); }
   const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
@@ -66,18 +66,18 @@
       const g = f[k];
       const books = Object.entries(g.books);
       const status = today < g.start
-        ? `tracking starts <b>${g.start}</b> · first read ${g.first_read} · ${g.days} days tracked`
-        : `tracking since <b>${g.start}</b> · first read ${g.first_read} · ${g.days} days tracked`;
+        ? `tracking starts <b>${esc(g.start)}</b> · first read ${esc(g.first_read)} · ${esc(g.days)} days tracked`
+        : `tracking since <b>${esc(g.start)}</b> · first read ${esc(g.first_read)} · ${esc(g.days)} days tracked`;
       const body = g.days === 0
         ? `<div class="fempty">No forward days yet. The daily job appends one row per book per trading day, and this
-             panel updates when it commits. The verdict is read once, on ${g.first_read}, with the pre-registered test.
-             <span class="m">tracking starts ${g.start} · first read ${g.first_read} · 0 days tracked</span></div>`
+             panel updates when it commits. The verdict is read once, on ${esc(g.first_read)}, with the pre-registered test.
+             <span class="m">tracking starts ${esc(g.start)} · first read ${esc(g.first_read)} · 0 days tracked</span></div>`
         : `<div class="fchart" id="fchart-${k}" role="img" aria-label="${k} forward cumulative net return by book"></div>`;
       return `<article class="fcard">
         <h3>${titles[k]}</h3>
-        <p class="fmeta">${status}${g.last_date ? ` · last ${g.last_date}` : ""}</p>
+        <p class="fmeta">${status}${g.last_date ? ` · last ${esc(g.last_date)}` : ""}</p>
         ${body}
-        ${books.map(([b, d]) => `<div class="fbook"><span>${esc(b)}</span><span>${d.days} d · ${d.cum.length ? pct(d.cum[d.cum.length - 1], 2) : "—"}</span></div>`).join("")}
+        ${books.map(([b, d]) => `<div class="fbook"><span>${esc(b)}</span><span>${esc(d.days)} d · ${d.cum.length ? pct(d.cum[d.cum.length - 1], 2) : "—"}</span></div>`).join("")}
         <p class="hint">${esc(g.note)} · <a href="${esc(g.source)}">forward.csv</a></p>
       </article>`;
     }).join("");
@@ -150,41 +150,43 @@
 
   function send() {
     const p = params();
-    if (inflight) { queued = { p, d: isDefault() }; return; }
+    if (inflight) { queued = { p, d: isDefault(), j: !!p.windows }; return; }
     inflight = true;
     $("#ctime").textContent = "computing…";
-    post(p, isDefault());
+    post(p, isDefault(), !!p.windows);
   }
 
-  function post(p, d) { const id = ++seq; sentDefault.set(id, d); worker.postMessage({ type: "run", id, params: p }); }
+  function post(p, d, j) { const id = ++seq; sentDefault.set(id, { d, j }); worker.postMessage({ type: "run", id, params: p }); }
 
   function onResult(m) {
     inflight = false;
-    if (queued) { const q = queued; queued = null; inflight = true; post(q.p, q.d); }
+    if (queued) { const q = queued; queued = null; inflight = true; post(q.p, q.d, q.j); }
     else $(".out").classList.remove("stale");
-    last = m.out; lastDefault = !!sentDefault.get(m.id); sentDefault.delete(m.id);
+    const sent = sentDefault.get(m.id) || {};
+    last = m.out; lastDefault = !!sent.d; lastDisjoint = !!sent.j; sentDefault.delete(m.id);
     $("#ctime").textContent = `computed in ${(m.ms / 1000).toFixed(2)} s`;
     renderResult(m.out);
   }
 
   function renderResult(o) {
-    $("#s-sharpe").textContent = fmt(o.sharpe);
-    $("#s-ci").textContent = `95% CI [${fmt(o.sharpe_lo)}, ${fmt(o.sharpe_hi)}]`;
+    const dj = lastDisjoint;     // Sharpe, CI and vol are not meaningful on joined, non-contiguous windows
+    $("#s-sharpe").textContent = dj ? "—" : fmt(o.sharpe);
+    $("#s-ci").textContent = dj ? "Sharpe not meaningful on disjoint windows" : `95% CI [${fmt(o.sharpe_lo)}, ${fmt(o.sharpe_hi)}]`;
     $("#s-days").textContent = o.days.toLocaleString("en-US");
     $("#s-ret").textContent = pct(o.ann_ret);
-    $("#s-vol").textContent = pct(o.ann_vol);
+    $("#s-vol").textContent = dj ? "—" : pct(o.ann_vol);
     $("#s-dd").textContent = pct(o.maxdd);
     $("#s-cost").textContent = pct(o.cost_ann, 2);
     const ref = META && META.reference;
     if (ref && lastDefault && o.sharpe != null) {
       const d = Math.abs(o.sharpe - ref.sharpe);
-      $("#refcheck").innerHTML = `Default settings vs the paper engine (<span class="m">trend.model.backtest</span>, same data, ${ref.days} days): ` +
+      $("#refcheck").innerHTML = `Default settings vs the paper engine (<span class="m">trend.model.backtest</span>, same data, ${esc(ref.days)} days): ` +
         `${o.sharpe.toFixed(3)} here, ${ref.sharpe.toFixed(3)} there, difference ${d.toFixed(4)} ` +
         (d < 0.01 ? `<span class="ok">· match</span>` : `<b>· MISMATCH</b>`);
     } else {
       $("#refcheck").textContent = "Signal at close t, trade t+1. Net of v1 costs × multiplier; no market impact. Exploration on seen data, not evidence.";
     }
-    $("#crisis").innerHTML = Object.entries(o.crisis).sort((a, b) => (a[1].start < b[1].start ? -1 : 1)).map(([k, c]) => `<tr><td>${esc(k)}</td><td class="dates">${c.start} – ${c.end}</td>` +
+    $("#crisis").innerHTML = Object.entries(o.crisis).sort((a, b) => (a[1].start < b[1].start ? -1 : 1)).map(([k, c]) => `<tr><td>${esc(k)}</td><td class="dates">${esc(c.start)} – ${esc(c.end)}</td>` +
       `<td class="n">${c.days || "—"}</td><td class="n">${c.cum_net_return == null ? "—" : pct(c.cum_net_return)}</td></tr>`).join("");
     drawEquity(o);
   }
@@ -232,10 +234,18 @@
       else if (m.type === "ready") { ready = true; stage("ready"); $("#run").disabled = false; send(); }
       else if (m.type === "result") onResult(m);
       else if (m.type === "error") {
-        inflight = false;
-        $("#loader").classList.add("err");
-        $("#loader-text").textContent = "Error: " + m.message.split("\n").slice(-2).join(" ");
+        const msg = "Error: " + String(m.message).split("\n").slice(-2).join(" ");
         console.error(m.message);
+        if (m.id == null) {                       // boot failure: the lab cannot run
+          inflight = false; ready = false;
+          $("#loader").classList.add("err"); $("#loader-text").textContent = msg;
+          return;
+        }
+        sentDefault.delete(m.id);
+        inflight = false;
+        $("#ctime").textContent = msg;
+        if (queued) { const q = queued; queued = null; inflight = true; post(q.p, q.d, q.j); }
+        else $(".out").classList.remove("stale");
       }
     };
     worker.onerror = (e) => { $("#loader").classList.add("err"); $("#loader-text").textContent = "Worker failed to start: " + (e.message || e); };

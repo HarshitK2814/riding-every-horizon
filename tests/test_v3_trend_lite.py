@@ -87,3 +87,26 @@ def test_lite_matches_engine_on_snapshot():
         for r in pd.read_csv(summ).query("book == 'v1_blend' and days > 0").itertuples():
             o = tl.run(R, inst["sector"], inst["cost_bp"], inst["rolls"], dict(DEFAULT, start=r.start, end=r.end), cache=cache)
             assert o["days"] == r.days and abs(o["sharpe"] - r.sharpe) < 0.01, (r.period, o["sharpe"], r.sharpe)
+
+
+@pytest.mark.skipif(not SNAP.exists(), reason="snapshot/ not present")
+def test_lite_total_crisis_returns_match_paper_table():
+    """Crisis table compounds net + T-bill, as scripts/figures.py does; tolerance covers vintage revisions."""
+    import yaml
+    from trend import data
+    dtb3 = ROOT / "snapshot" / "raw" / "dtb3.parquet"
+    paper = ROOT / "results" / "tables" / "crisis_returns.csv"
+    if not (dtb3.exists() and paper.exists()):
+        pytest.skip("dtb3 snapshot or paper crisis table missing")
+    R = pd.read_parquet(SNAP)
+    inst = data.instrument_table()
+    rf = (pd.read_parquet(dtb3)["DTB3"] / 100 / 252).reindex(R.index).ffill().fillna(0.0)
+    o = tl.run(R, inst["sector"], inst["cost_bp"], inst["rolls"], dict(DEFAULT), rf=rf)
+    ref = pd.read_csv(paper, index_col=0)["Trend blend"]
+    wins = {"2008": ("2008-01-01", "2008-12-31", "2008"), "Q4 2018": ("2018-10-01", "2018-12-31", "2018Q4"),
+            "Feb-Mar 2020": ("2020-02-19", "2020-03-23", "covid-2020"), "2022": ("2022-01-01", "2022-12-31", "2022")}
+    for label, (a, z, key) in wins.items():
+        assert (o["crisis"][key]["start"], o["crisis"][key]["end"]) == (a, z)
+        assert abs(o["crisis"][key]["cum_net_return"] - ref[label]) < 0.005, (label, o["crisis"][key], ref[label])
+    # Sharpe stays on excess returns; total = net + rf
+    np.testing.assert_allclose((o["total"] - o["net"]).to_numpy(), rf.reindex(o["net"].index).to_numpy(), atol=1e-15)

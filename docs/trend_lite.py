@@ -164,8 +164,10 @@ def _positions(R, sector, params, sig, cache):
 
 
 def run(R: pd.DataFrame, sector: pd.Series, cost_bp: pd.Series, rolls: pd.Series, params: dict,
-        sig: pd.DataFrame | None = None, cache: dict | None = None) -> dict:
-    """Backtest on full history, then slice to params start..end (or the union of `windows`)."""
+        sig: pd.DataFrame | None = None, cache: dict | None = None, rf: pd.Series | None = None) -> dict:
+    """Backtest on full history, then slice to params start..end (or the union of `windows`).
+    Returns `net` (excess of cash; Sharpe is computed on it) and `total` = net + daily T-bill `rf`
+    (what the paper's growth curve and crisis table compound). Without `rf`, total == net."""
     if params.get("signal") == "tsfm" and sig is None:
         raise ValueError("signal 'tsfm' needs the precomputed signal panel `sig`")
     R = prepare(R)
@@ -177,10 +179,12 @@ def run(R: pd.DataFrame, sector: pd.Series, cost_bp: pd.Series, rolls: pd.Series
     cost = (costs(W, cost_bp, rolls) * float(params.get("cost_mult", 1.0))).shift(LAG).fillna(0.0)
     started = k.notna().shift(LAG, fill_value=False)
     full = (gross - cost)[started]
+    cash = rf.reindex(full.index).ffill().fillna(0.0) if rf is not None else pd.Series(0.0, index=full.index)
+    full_tot = full + cash
     turn = W.diff().abs().fillna(W.abs()).sum(axis=1).shift(LAG).fillna(0.0)[started]
     crisis = {}
     for name, (a, z) in CRISES.items():
-        r = full.loc[a:z]
+        r = full_tot.loc[a:z]
         ok = len(r) > 0 and full.index[0] <= pd.Timestamp(a)
         crisis[name] = {"start": a, "end": z, "days": int(len(r)) if ok else 0,
                         "cum_net_return": float((1 + r).prod() - 1) if ok else None}
@@ -191,7 +195,7 @@ def run(R: pd.DataFrame, sector: pd.Series, cost_bp: pd.Series, rolls: pd.Series
         net = full[m]
     else:
         net = full.loc[params.get("start"):params.get("end")]
-    out = {"net": net, "days": int(len(net)), "crisis": crisis, "sharpe": np.nan, "sharpe_lo": np.nan,
+    out = {"net": net, "total": net + cash.reindex(net.index), "days": int(len(net)), "crisis": crisis, "sharpe": np.nan, "sharpe_lo": np.nan,
            "sharpe_hi": np.nan, "ann_ret": np.nan, "ann_vol": np.nan, "maxdd": np.nan,
            "turnover": np.nan, "cost_ann": np.nan}
     if len(net) > 2:
@@ -208,7 +212,8 @@ def run(R: pd.DataFrame, sector: pd.Series, cost_bp: pd.Series, rolls: pd.Series
 
 
 # ---- browser glue: the Web Worker calls exactly these two functions -------------------------------------------
-def load_inputs(ret_bytes: bytes, inst_json: str, sig_bytes: bytes | None = None) -> dict:
+def load_inputs(ret_bytes: bytes, inst_json: str, sig_bytes: bytes | None = None,
+                rf_bytes: bytes | None = None) -> dict:
     """Parse docs/data files (gzip or already-decoded CSV bytes, as a server may decode them)."""
     import gzip
     import io
@@ -221,16 +226,18 @@ def load_inputs(ret_bytes: bytes, inst_json: str, sig_bytes: bytes | None = None
     R = frame(ret_bytes)
     inst = pd.DataFrame(json.loads(inst_json)).T.reindex(R.columns)
     return {"R": R, "sector": inst["sector"], "cost_bp": inst["cost_bp"].astype(float),
-            "rolls": inst["rolls"].astype(float), "sig": frame(sig_bytes) if sig_bytes else None}
+            "rolls": inst["rolls"].astype(float), "sig": frame(sig_bytes) if sig_bytes else None,
+            "rf": frame(rf_bytes)["rf"] if rf_bytes else None}
 
 
 def run_json(inp: dict, params_json: str, cache: dict | None = None) -> str:
-    """run() on loaded inputs; returns JSON (dates, equity, stats, crisis) for the page."""
+    """run() on loaded inputs; returns JSON (dates, equity = growth of 1 incl. T-bill, stats on excess returns, crisis) for the page."""
     import json
     p = json.loads(params_json)
-    res = run(inp["R"], inp["sector"], inp["cost_bp"], inp["rolls"], p, sig=inp["sig"], cache=cache)
+    res = run(inp["R"], inp["sector"], inp["cost_bp"], inp["rolls"], p, sig=inp["sig"], cache=cache, rf=inp.get("rf"))
     net = res.pop("net")
+    total = res.pop("total")
     clean = {k: (None if isinstance(v, float) and not np.isfinite(v) else v) for k, v in res.items()}
     clean.update(dates=[d.strftime("%Y-%m-%d") for d in net.index],
-                 equity=[round(float(v), 6) for v in np.cumprod(1 + net.to_numpy())])
+                 equity=[round(float(v), 6) for v in np.cumprod(1 + total.to_numpy())])
     return json.dumps(clean)
