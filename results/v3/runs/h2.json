@@ -1,41 +1,41 @@
 {
-  "mean_path_diff": 0.3896201359233865,
-  "ci_lo": -0.29911750116034547,
-  "ci_hi": 1.0746655775341039,
-  "dsr_clean": 0.6868382607822872,
-  "ci_avg_series_lo": -0.26991285661834613,
-  "ci_avg_series_hi": 1.1840100256051171,
+  "mean_path_diff": 0.39111846599141004,
+  "ci_lo": -0.2990129384670093,
+  "ci_hi": 1.0770165951712671,
+  "dsr_clean": 0.6896093006602794,
+  "ci_avg_series_lo": -0.26794664957416264,
+  "ci_avg_series_hi": 1.1828233015829455,
   "ci_avg_series_note": "superseded: bootstrap of averaged-path series",
-  "dsr_clean_across_path_var": 0.853627181867409,
+  "dsr_clean_across_path_var": 0.8535466594251722,
   "clean_ann_sharpe_ci": [
-    0.24330430179949813,
-    1.242015256398258
+    0.24467272321601616,
+    1.2437167665913782
   ],
   "v1_ann_sharpe_ci": [
-    -0.14705560811988014,
-    0.8487192804812876
+    -0.14672556028122874,
+    0.8489356050565969
   ],
   "n_trials": 98,
   "paths": 5,
   "days": 4128,
   "bootstrap_n": 4128,
   "days_note": "common day set = days >= first full feature row where all 5 CPCV paths and v1 are non-NaN (4128); 5 days with v1 present but some path NaN dropped (days not covered by every path); previous run used per-path day sets (4129 each) for the point estimate and 4133 for the bootstrap",
-  "clean_ann_sharpe": 0.7405249447731028,
-  "v1_ann_sharpe": 0.35090480884971637,
+  "clean_ann_sharpe": 0.7423055508065837,
+  "v1_ann_sharpe": 0.35118708481517374,
   "headline_note": "clean_ann_sharpe = mean over paths of per-path annualised Sharpe (matches its CI); v1 Sharpe on the common day set",
-  "clean_ann_sharpe_avg_series": 0.8173703198280912,
+  "clean_ann_sharpe_avg_series": 0.8193259259990325,
   "clean_ann_sharpe_avg_series_note": "Sharpe of the 5-path averaged return series; diversified, not the prereg statistic",
   "path_diffs": [
-    0.06092929309683376,
-    0.4054065564578339,
-    0.3212634833018824,
-    0.5172841241572137,
-    0.6432172226031689
+    0.06133531504009754,
+    0.4063191326630345,
+    0.3226585595132166,
+    0.5195637905807624,
+    0.645715532159939
   ],
   "sr_var": 0.00030187162001605157,
   "sr_var_note": "v2 family variance of daily Sharpe (96 configs)",
-  "dsr_sensitivity_sr_var_across_paths": 0.853627181867409,
-  "sr_var_across_paths": 0.00019203282683846913,
+  "dsr_sensitivity_sr_var_across_paths": 0.8535466594251722,
+  "sr_var_across_paths": 0.00019344505280171365,
   "bootstrap": {
     "n_boot": 2000,
     "mean_block": 21,

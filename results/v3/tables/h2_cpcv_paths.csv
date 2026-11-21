@@ -1,6 +1,6 @@
 path,period,label,signal_bar,costs,days,clean_ann_sharpe,v1_ann_sharpe,clean_minus_v1_sharpe
-0,2001-2017 CPCV,contaminated-free model; seen period for researcher,"close t, trade t+1",v1 cost_bp + roll,4128,0.4118341019465501,0.35090480884971637,0.06092929309683376
-1,2001-2017 CPCV,contaminated-free model; seen period for researcher,"close t, trade t+1",v1 cost_bp + roll,4128,0.7563113653075503,0.35090480884971637,0.4054065564578339
-2,2001-2017 CPCV,contaminated-free model; seen period for researcher,"close t, trade t+1",v1 cost_bp + roll,4128,0.6721682921515988,0.35090480884971637,0.3212634833018824
-3,2001-2017 CPCV,contaminated-free model; seen period for researcher,"close t, trade t+1",v1 cost_bp + roll,4128,0.8681889330069301,0.35090480884971637,0.5172841241572137
-4,2001-2017 CPCV,contaminated-free model; seen period for researcher,"close t, trade t+1",v1 cost_bp + roll,4128,0.9941220314528854,0.35090480884971637,0.6432172226031689
+0,2001-2017 CPCV,contaminated-free model; seen period for researcher,"close t, trade t+1",v1 cost_bp + roll,4128,0.4125223998552713,0.35118708481517374,0.06133531504009754
+1,2001-2017 CPCV,contaminated-free model; seen period for researcher,"close t, trade t+1",v1 cost_bp + roll,4128,0.7575062174782082,0.35118708481517374,0.4063191326630345
+2,2001-2017 CPCV,contaminated-free model; seen period for researcher,"close t, trade t+1",v1 cost_bp + roll,4128,0.6738456443283903,0.35118708481517374,0.3226585595132166
+3,2001-2017 CPCV,contaminated-free model; seen period for researcher,"close t, trade t+1",v1 cost_bp + roll,4128,0.8707508753959361,0.35118708481517374,0.5195637905807624
+4,2001-2017 CPCV,contaminated-free model; seen period for researcher,"close t, trade t+1",v1 cost_bp + roll,4128,0.9969026169751127,0.35118708481517374,0.645715532159939

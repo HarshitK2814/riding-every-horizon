@@ -1,13 +1,13 @@
 book,window,start,end,label,days,cum_net_return,signal_bar,costs
-v1_blend,2018Q4,2018-10-01,2018-12-31,contaminated+seen,65,0.024116213209860682,"close t, trade t+1",v1 cost_bp + roll
-v1_blend,covid-2020,2020-02-19,2020-03-23,contaminated+seen,24,0.22834764321138645,"close t, trade t+1",v1 cost_bp + roll
-v1_blend,2022,2022-01-01,2022-12-31,contaminated+seen,258,0.1092133784281264,"close t, trade t+1",v1 cost_bp + roll
-v1_weekly,2018Q4,2018-10-01,2018-12-31,contaminated+seen,65,0.021440205030819337,"close t, trade t+1",v1 cost_bp + roll
-v1_weekly,covid-2020,2020-02-19,2020-03-23,contaminated+seen,24,0.18017136164293834,"close t, trade t+1",v1 cost_bp + roll
-v1_weekly,2022,2022-01-01,2022-12-31,contaminated+seen,258,0.0698641697563489,"close t, trade t+1",v1 cost_bp + roll
-tsfm_blend,2018Q4,2018-10-01,2018-12-31,contaminated+seen,65,-0.035715919792354556,"close t, trade t+1",v1 cost_bp + roll
-tsfm_blend,covid-2020,2020-02-19,2020-03-23,contaminated+seen,24,-0.220672077425619,"close t, trade t+1",v1 cost_bp + roll
-tsfm_blend,2022,2022-01-01,2022-12-31,contaminated+seen,258,-0.07434217148622468,"close t, trade t+1",v1 cost_bp + roll
-clean_blend,2018Q4,2018-10-01,2018-12-31,contaminated+seen,65,-0.027526522927771024,"close t, trade t+1",v1 cost_bp + roll
-clean_blend,covid-2020,2020-02-19,2020-03-23,contaminated+seen,24,0.0797194345192982,"close t, trade t+1",v1 cost_bp + roll
-clean_blend,2022,2022-01-01,2022-12-31,contaminated+seen,258,0.06506412694829367,"close t, trade t+1",v1 cost_bp + roll
+v1_blend,2018Q4,2018-10-01,2018-12-31,contaminated+seen,65,0.02411634888929215,"close t, trade t+1",v1 cost_bp + roll
+v1_blend,covid-2020,2020-02-19,2020-03-23,contaminated+seen,24,0.22834769368490782,"close t, trade t+1",v1 cost_bp + roll
+v1_blend,2022,2022-01-01,2022-12-31,contaminated+seen,258,0.10921331315798999,"close t, trade t+1",v1 cost_bp + roll
+v1_weekly,2018Q4,2018-10-01,2018-12-31,contaminated+seen,65,0.021440200595553183,"close t, trade t+1",v1 cost_bp + roll
+v1_weekly,covid-2020,2020-02-19,2020-03-23,contaminated+seen,24,0.18017161026910022,"close t, trade t+1",v1 cost_bp + roll
+v1_weekly,2022,2022-01-01,2022-12-31,contaminated+seen,258,0.06986453121309899,"close t, trade t+1",v1 cost_bp + roll
+tsfm_blend,2018Q4,2018-10-01,2018-12-31,contaminated+seen,65,-0.03572398783319808,"close t, trade t+1",v1 cost_bp + roll
+tsfm_blend,covid-2020,2020-02-19,2020-03-23,contaminated+seen,24,-0.22066815993386413,"close t, trade t+1",v1 cost_bp + roll
+tsfm_blend,2022,2022-01-01,2022-12-31,contaminated+seen,258,-0.07441584384263555,"close t, trade t+1",v1 cost_bp + roll
+clean_blend,2018Q4,2018-10-01,2018-12-31,contaminated+seen,65,-0.02752729904856488,"close t, trade t+1",v1 cost_bp + roll
+clean_blend,covid-2020,2020-02-19,2020-03-23,contaminated+seen,24,0.07971972507152625,"close t, trade t+1",v1 cost_bp + roll
+clean_blend,2022,2022-01-01,2022-12-31,contaminated+seen,258,0.06506473367897003,"close t, trade t+1",v1 cost_bp + roll

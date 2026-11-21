@@ -130,7 +130,12 @@ def save_clean_model(path, R: pd.DataFrame, train_end: str = "2017-12-31", seed:
     torch.save(m, path)
 
 
+def clean_predict_pred(path, R: pd.DataFrame, device: str = "cpu") -> pd.DataFrame:
+    """Per-horizon predictions (date x inst by short/medium/long) from the frozen model at `path`. Never retrains."""
+    m = torch.load(path, map_location="cpu", weights_only=False)
+    return _apply(m, _test_features(R, m["train_end"]), device)
+
+
 def clean_predict(path, R: pd.DataFrame, device: str = "cpu") -> pd.DataFrame:
     """Signal (date x inst) for dates > train_end from the frozen model at `path`. Never retrains."""
-    m = torch.load(path, map_location="cpu", weights_only=False)
-    return clean_signal(_apply(m, _test_features(R, m["train_end"]), device))
+    return clean_signal(clean_predict_pred(path, R, device))

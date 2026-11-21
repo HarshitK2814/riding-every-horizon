@@ -2,7 +2,7 @@
 Signal at close t, trade t+1 (lag=1). Costs: v1 cost_bp + roll. Sharpe 95% stationary-bootstrap CI
 (mean block 20, 2000 draws, seed 0). Everything here is descriptive/exploratory: TimesFM history before
 2025-10-01 is `contaminated`, 2018-01.. is `seen`. Only the forward period is confirmatory.
-TREND_QUICK=1 loads results/v3/cache/clean_signal_full.parquet instead of retraining.
+TREND_QUICK=1 loads results/v3/cache/clean_signal_full.parquet; the full run predicts from the frozen clean_model.pt (never retrains).
 Run: python scripts/v3/make_results_v3.py"""
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ from qengine.market import market_inputs
 from trend import model
 from trend.v2.books import load_inputs
 from trend.v3.books import build_v3_weights
-from trend.v3.clean_model import clean_full_pred, clean_signal
+from trend.v3.clean_model import clean_predict_pred, clean_signal
 from trend.v3.labels import period_label
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -87,7 +87,8 @@ def main() -> None:
         clean_full = pd.read_parquet(sig_p)
         clean_pred = pd.read_parquet(pred_p)
     else:
-        clean_pred = clean_full_pred(R, train_end="2017-12-31", seed=0, epochs=20)
+        # frozen committed model (never retrained): aligns the full run with results/v3/cache/clean_model.pt
+        clean_pred = clean_predict_pred(CACHE / "clean_model.pt", R)
         clean_full = clean_signal(clean_pred)
         clean_full.to_parquet(sig_p)
         clean_pred.to_parquet(pred_p)
@@ -386,6 +387,22 @@ Capacity: square-root impact with coefficient 0.25 / 0.5 / 1.0, lag 2 (trade at 
 {tbl_cap}
 
 Full AUM grid: `results/v3/tables/e3_costs.csv`.
+
+## Data vintage
+
+Reference vintage: data downloaded **2026-11-21** (last market date 2026-11-20); file hashes in `results/v3/DATA_VINTAGE.md`, copy in `snapshot/`. Every table, run and cache here is regenerated on it. Reason: Yahoo revised history after the first v3 run (downloaded 2026-10-13, ending 2026-10-13; e.g. MXN; the frozen clean model's signals changed on 35 of 2266 dates, max abs 0.23). The old vintage is not recoverable. Two things changed together, so old-to-new differences are not all revisions: (1) revised history; (2) 5 more weeks of data (2026-10-14 to 2026-11-20), which lengthens `recent`, `recent (from 2025-10-01)` and the 2018-01..end rows (labels still read "2026-10"; they mean "to end of data"). The clean model is the frozen `clean_model.pt` (not retrained); the earlier full run retrained it.
+
+| item | old vintage | new vintage |
+|---|---|---|
+| test Sharpe v1_blend / v1_weekly / tsfm_blend / clean_blend | 0.23 / 0.23 / 0.21 / 0.78 | 0.23 / 0.23 / 0.21 / 0.78 |
+| recent Sharpe (same order) | 0.38 / -0.13 / 0.32 / 1.49 | 0.23 / -0.18 / 0.16 / 0.81 |
+| recent from 2025-10-01 Sharpe (same order) | 1.01 / 0.51 / 0.30 / 1.18 | 0.72 / 0.37 / 0.05 / 0.19 |
+| H2 mean path difference, 95% CI, deflated Sharpe | 0.390, [-0.299, 1.075], 0.687 | 0.391, [-0.299, 1.077], 0.690 (still NOT SUPPORTED) |
+| E2 hit rate 2018-01..2025-09 -> after cutoff (tsfm / clean / v1) | 0.522->0.500 / 0.525->0.510 / 0.498->0.462 | 0.522->0.504 / 0.525->0.496 / 0.498->0.468 (still not flagged) |
+| E3 2018+ Sharpe cost x1 (v1 / tsfm) | 0.26 / 0.24 | 0.23 / 0.20 |
+| E3 capacity, tsfm low-ADV, impact off (coef 0.25 / 0.5 / 1.0) | 500m / 100m / 50m | 1,000m / 250m / 100m |
+
+The `recent` changes are mostly the extra five weeks (a weak stretch for the clean and TimesFM books); the development, validation and test periods end before any new data, so their small changes are pure revisions. The TimesFM cache was regenerated in full (35,878 of 153,579 old rows differ by more than 1e-6; max abs signal change 0.149). v1 and v2 results are unchanged and stay sealed on their own vintages.
 
 ## What this does not show
 

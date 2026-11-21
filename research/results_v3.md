@@ -15,7 +15,7 @@ Signal at close t, trade t+1; v1 costs (cost_bp + roll); Sharpe 95% stationary-b
 | H1 (TimesFM adds value, forward) | pending — first read 2027-11-30 | forward (no data yet) |
 | H2 (clean model beats v1, CPCV 2001-2017) | **NOT SUPPORTED** | seen, not out-of-sample; 4128 days |
 
-H2 detail (EXP-v3-003 to 006): clean MLP ann. Sharpe 0.74 (95% CI 0.24 to 1.24, mean over 5 CPCV paths) vs v1 0.35 (-0.15 to 0.85); mean path difference 0.390, 95% CI [-0.299, 1.075], deflated Sharpe 0.687 (bar 0.90). The CI spans zero and the DSR is below the bar. Two corrections after review did not change the verdict: EXP-v3-004 recomputed the CI on the pre-registered statistic, EXP-v3-005 put everything on one common day set; EXP-v3-006 notes the DSR uses the path-averaged series, which favours clean_blend. Signal at close t, trade t+1; v1 costs; capacity not assessed.
+H2 detail (EXP-v3-003 to 006): clean MLP ann. Sharpe 0.74 (95% CI 0.24 to 1.24, mean over 5 CPCV paths) vs v1 0.35 (-0.15 to 0.85); mean path difference 0.391, 95% CI [-0.299, 1.077], deflated Sharpe 0.690 (bar 0.90). The CI spans zero and the DSR is below the bar. Two corrections after review did not change the verdict: EXP-v3-004 recomputed the CI on the pre-registered statistic, EXP-v3-005 put everything on one common day set; EXP-v3-006 notes the DSR uses the path-averaged series, which favours clean_blend. Signal at close t, trade t+1; v1 costs; capacity not assessed.
 
 ## Seen and contaminated periods (descriptive)
 
@@ -23,32 +23,32 @@ Books: `v1_blend` = v1 horizon blend (daily signal); `v1_weekly` = the same sign
 
 | book | period | label | days | ann_ret | ann_vol | sharpe | sharpe_lo | sharpe_hi | maxdd | turnover | cost_ann |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| v1_blend | development | contaminated | 3097 | 5.1% | 10.7% | 0.48 | -0.13 | 1.03 | -20.8% | 88.0 | 1.31% |
-| v1_blend | validation | contaminated | 1288 | 0.7% | 10.3% | 0.07 | -0.81 | 0.87 | -25.2% | 141.9 | 1.76% |
+| v1_blend | development | contaminated | 3097 | 5.1% | 10.7% | 0.48 | -0.13 | 1.03 | -20.8% | 87.9 | 1.31% |
+| v1_blend | validation | contaminated | 1288 | 0.7% | 10.3% | 0.06 | -0.82 | 0.87 | -25.2% | 141.9 | 1.76% |
 | v1_blend | test | contaminated+seen | 1807 | 2.5% | 10.8% | 0.23 | -0.52 | 0.96 | -19.9% | 94.0 | 1.39% |
-| v1_blend | recent | contaminated+seen / seen | 459 | 3.9% | 10.4% | 0.38 | -0.79 | 1.53 | -12.0% | 100.1 | 1.48% |
+| v1_blend | recent | contaminated+seen / seen | 487 | 2.4% | 10.6% | 0.23 | -0.96 | 1.40 | -12.0% | 101.1 | 1.48% |
 | v1_blend | recent (to 2025-09-30) | contaminated+seen | 193 | -6.0% | 9.6% | -0.63 | -2.41 | 1.36 | -12.0% | 106.0 | 1.59% |
-| v1_blend | recent (from 2025-10-01) | seen | 266 | 11.1% | 11.0% | 1.01 | -0.31 | 2.21 | -5.5% | 95.8 | 1.39% |
-| v1_weekly | development | contaminated | 3097 | 5.8% | 10.8% | 0.53 | -0.05 | 1.09 | -22.0% | 48.6 | 0.86% |
+| v1_blend | recent (from 2025-10-01) | seen | 294 | 8.0% | 11.2% | 0.72 | -0.73 | 1.96 | -8.2% | 97.9 | 1.41% |
+| v1_weekly | development | contaminated | 3097 | 5.8% | 10.8% | 0.54 | -0.05 | 1.09 | -22.0% | 48.5 | 0.86% |
 | v1_weekly | validation | contaminated | 1288 | -1.3% | 10.2% | -0.13 | -1.00 | 0.71 | -25.6% | 80.5 | 1.16% |
 | v1_weekly | test | contaminated+seen | 1807 | 2.4% | 10.7% | 0.23 | -0.48 | 0.93 | -17.4% | 53.2 | 0.92% |
-| v1_weekly | recent | contaminated+seen / seen | 459 | -1.4% | 10.7% | -0.13 | -1.33 | 1.09 | -14.7% | 54.5 | 0.95% |
+| v1_weekly | recent | contaminated+seen / seen | 487 | -1.9% | 10.7% | -0.18 | -1.38 | 1.03 | -14.7% | 54.6 | 0.95% |
 | v1_weekly | recent (to 2025-09-30) | contaminated+seen | 193 | -11.2% | 10.1% | -1.10 | -3.01 | 1.23 | -14.7% | 54.5 | 0.99% |
-| v1_weekly | recent (from 2025-10-01) | seen | 266 | 5.7% | 11.0% | 0.51 | -0.64 | 1.64 | -5.6% | 54.5 | 0.92% |
-| tsfm_blend | development | contaminated | 3097 | -2.3% | 10.6% | -0.21 | -0.76 | 0.33 | -43.9% | 51.3 | 0.88% |
-| tsfm_blend | validation | contaminated | 1288 | 4.4% | 8.8% | 0.50 | -0.18 | 1.23 | -15.5% | 79.5 | 0.95% |
-| tsfm_blend | test | contaminated+seen | 1807 | 2.3% | 10.8% | 0.21 | -0.43 | 0.89 | -22.5% | 42.3 | 0.84% |
-| tsfm_blend | recent | contaminated+seen / seen | 459 | 3.6% | 11.2% | 0.32 | -0.84 | 1.59 | -12.0% | 37.1 | 0.76% |
+| v1_weekly | recent (from 2025-10-01) | seen | 294 | 4.1% | 11.1% | 0.37 | -0.90 | 1.54 | -8.5% | 54.7 | 0.92% |
+| tsfm_blend | development | contaminated | 3097 | -2.3% | 10.6% | -0.22 | -0.77 | 0.33 | -44.0% | 51.3 | 0.88% |
+| tsfm_blend | validation | contaminated | 1288 | 4.5% | 8.9% | 0.51 | -0.18 | 1.25 | -15.7% | 79.4 | 0.95% |
+| tsfm_blend | test | contaminated+seen | 1807 | 2.3% | 10.8% | 0.21 | -0.42 | 0.90 | -22.5% | 42.3 | 0.84% |
+| tsfm_blend | recent | contaminated+seen / seen | 487 | 1.9% | 11.3% | 0.16 | -0.89 | 1.32 | -12.0% | 36.8 | 0.74% |
 | tsfm_blend | recent (to 2025-09-30) | contaminated+seen | 193 | 3.8% | 10.6% | 0.36 | -1.55 | 2.69 | -8.4% | 47.5 | 0.95% |
-| tsfm_blend | recent (from 2025-10-01) | seen | 266 | 3.5% | 11.7% | 0.30 | -1.26 | 1.89 | -12.0% | 29.6 | 0.62% |
+| tsfm_blend | recent (from 2025-10-01) | seen | 294 | 0.6% | 11.8% | 0.05 | -1.32 | 1.47 | -12.0% | 29.8 | 0.61% |
 | clean_blend | development | not computed | 0 |  |  |  |  |  |  |  |  |
 | clean_blend | validation | not computed | 0 |  |  |  |  |  |  |  |  |
 | clean_blend | test | contaminated+seen | 1807 | 7.7% | 9.9% | 0.78 | 0.13 | 1.46 | -13.3% | 82.7 | 1.29% |
-| clean_blend | recent | contaminated+seen / seen | 459 | 13.1% | 8.7% | 1.49 | 0.40 | 2.76 | -7.4% | 94.7 | 1.36% |
+| clean_blend | recent | contaminated+seen / seen | 487 | 7.5% | 9.3% | 0.81 | -0.44 | 2.13 | -9.4% | 93.1 | 1.34% |
 | clean_blend | recent (to 2025-09-30) | contaminated+seen | 193 | 16.1% | 8.1% | 1.98 | 0.12 | 4.09 | -5.2% | 68.6 | 1.11% |
-| clean_blend | recent (from 2025-10-01) | seen | 266 | 10.9% | 9.2% | 1.18 | -0.25 | 2.65 | -7.4% | 113.7 | 1.54% |
+| clean_blend | recent (from 2025-10-01) | seen | 294 | 1.9% | 9.9% | 0.19 | -1.48 | 1.81 | -9.4% | 109.1 | 1.49% |
 
-Net Sharpe with 95% stationary-bootstrap CI (mean block 20, 2000 draws, seed 0); `days` is the sample count of each row; each book starts on its first live day. `recent (to 2025-09-30)` and `recent (from 2025-10-01)` split the recent period at the TimesFM cutoff. In the `test` period (2018-2024; `contaminated+seen` for TimesFM) Sharpe is 0.23 for v1_blend, 0.23 for v1_weekly, 0.21 for tsfm_blend and 0.78 for clean_blend (1807 days). After the cutoff (`seen`) it is 1.01, 0.51, 0.30 and 1.18 on 266 days, with wide CIs.
+Net Sharpe with 95% stationary-bootstrap CI (mean block 20, 2000 draws, seed 0); `days` is the sample count of each row; each book starts on its first live day. `recent (to 2025-09-30)` and `recent (from 2025-10-01)` split the recent period at the TimesFM cutoff. In the `test` period (2018-2024; `contaminated+seen` for TimesFM) Sharpe is 0.23 for v1_blend, 0.23 for v1_weekly, 0.21 for tsfm_blend and 0.78 for clean_blend (1807 days). After the cutoff (`seen`) it is 0.72, 0.37, 0.05 and 0.19 on 294 days, with wide CIs.
 
 ### Crisis windows (cumulative net return, compounded)
 
@@ -83,19 +83,19 @@ Hit = sign of the short-horizon signal at close t equals sign of the realised lo
 
 | signal | band | label | n_obs | hit_rate | wilson_lo | wilson_hi |
 |---|---|---|---|---|---|---|
-| tsfm_short | pre-2018 (contaminated) | contaminated | 33124 | 0.511 | 0.506 | 0.517 |
+| tsfm_short | pre-2018 (contaminated) | contaminated | 33124 | 0.512 | 0.506 | 0.517 |
 | clean_short | pre-2018 (contaminated) | contaminated | 0 |  |  |  |
-| v1_sign_short | pre-2018 (contaminated) | contaminated | 33124 | 0.498 | 0.492 | 0.503 |
+| v1_sign_short | pre-2018 (contaminated) | contaminated | 33124 | 0.498 | 0.493 | 0.503 |
 | tsfm_short | 2018-01..2025-09 (contaminated+seen) | contaminated+seen | 15600 | 0.522 | 0.514 | 0.530 |
 | clean_short | 2018-01..2025-09 (contaminated+seen) | contaminated+seen | 15600 | 0.525 | 0.517 | 0.532 |
 | v1_sign_short | 2018-01..2025-09 (contaminated+seen) | contaminated+seen | 15600 | 0.498 | 0.490 | 0.506 |
-| tsfm_short | 2025-10..2026-09 (seen, after cutoff) | seen, after cutoff | 1911 | 0.500 | 0.477 | 0.522 |
-| clean_short | 2025-10..2026-09 (seen, after cutoff) | seen, after cutoff | 1911 | 0.510 | 0.487 | 0.532 |
-| v1_sign_short | 2025-10..2026-09 (seen, after cutoff) | seen, after cutoff | 1911 | 0.462 | 0.440 | 0.484 |
+| tsfm_short | 2025-10..2026-09 (seen, after cutoff) | seen, after cutoff | 2145 | 0.504 | 0.483 | 0.525 |
+| clean_short | 2025-10..2026-09 (seen, after cutoff) | seen, after cutoff | 2145 | 0.496 | 0.474 | 0.517 |
+| v1_sign_short | 2025-10..2026-09 (seen, after cutoff) | seen, after cutoff | 2145 | 0.468 | 0.447 | 0.489 |
 
 A memorised model would hit more often before the cutoff than after. Compare the TimesFM drop with the v1 sign and clean rows, which cannot have memorised these years. Differences of a point or two are inside the (understated) noise.
 
-**E2 conclusion (prereg rule: flag only a TimesFM-only drop after 2025-10-01).** Hit rate, 2018-01..2025-09 -> 2025-10..2026-09 on the common set: tsfm_short 0.522 -> 0.500 (n 15600 -> 1911); clean_short 0.525 -> 0.510 (n 15600 -> 1911); v1_sign_short 0.498 -> 0.462 (n 15600 -> 1911). Not flagged as memorisation; the drop is shared with the non-TimesFM signals.
+**E2 conclusion (prereg rule: flag only a TimesFM-only drop after 2025-10-01).** Hit rate, 2018-01..2025-09 -> 2025-10..2026-09 on the common set: tsfm_short 0.522 -> 0.504 (n 15600 -> 2145); clean_short 0.525 -> 0.496 (n 15600 -> 2145); v1_sign_short 0.498 -> 0.468 (n 15600 -> 2145). Not flagged as memorisation; the drop is shared with the non-TimesFM signals.
 
 ## Costs and capacity
 
@@ -103,33 +103,49 @@ Cost multiplier (v1 `cost_bp` and roll scaled by 1 or 2; signal at close t, trad
 
 | book | what | period | label | days | sharpe | sharpe_lo | sharpe_hi |
 |---|---|---|---|---|---|---|---|
-| tsfm_blend | cost x1 | development | contaminated | 3097 | -0.21 | -0.76 | 0.33 |
-| tsfm_blend | cost x1 | 2018-01..2026-10 | contaminated+seen / seen | 2266 | 0.24 | -0.35 | 0.81 |
-| tsfm_blend | cost x2 | development | contaminated | 3097 | -0.30 | -0.84 | 0.25 |
-| tsfm_blend | cost x2 | 2018-01..2026-10 | contaminated+seen / seen | 2266 | 0.16 | -0.42 | 0.73 |
+| tsfm_blend | cost x1 | development | contaminated | 3097 | -0.22 | -0.77 | 0.33 |
+| tsfm_blend | cost x1 | 2018-01..2026-10 | contaminated+seen / seen | 2294 | 0.20 | -0.34 | 0.80 |
+| tsfm_blend | cost x2 | development | contaminated | 3097 | -0.30 | -0.85 | 0.25 |
+| tsfm_blend | cost x2 | 2018-01..2026-10 | contaminated+seen / seen | 2294 | 0.13 | -0.41 | 0.72 |
 | v1_blend | cost x1 | development | contaminated | 3097 | 0.48 | -0.13 | 1.03 |
-| v1_blend | cost x1 | 2018-01..2026-10 | contaminated+seen / seen | 2266 | 0.26 | -0.38 | 0.93 |
+| v1_blend | cost x1 | 2018-01..2026-10 | contaminated+seen / seen | 2294 | 0.23 | -0.42 | 0.89 |
 | v1_blend | cost x2 | development | contaminated | 3097 | 0.35 | -0.26 | 0.91 |
-| v1_blend | cost x2 | 2018-01..2026-10 | contaminated+seen / seen | 2266 | 0.13 | -0.52 | 0.81 |
+| v1_blend | cost x2 | 2018-01..2026-10 | contaminated+seen / seen | 2294 | 0.10 | -0.56 | 0.76 |
 
 Capacity: square-root impact with coefficient 0.25 / 0.5 / 1.0, lag 2 (trade at the next close, as in v2 `execution.py`); capacity is the AUM at which net Sharpe falls 0.10 below the USD 10m value; period 2018-01..2026-10. `primary_yahoo_adv` is the upper bound on impact, `low_adv_instruments_impact_off` the lower bound; ADV is Yahoo volume with the v2 data-defect rules. This is a seen-period number, not forward evidence.
 
 | book | adv_variant | impact_coef | label | days | capacity_aum_drop0p10 |
 |---|---|---|---|---|---|
-| tsfm_blend | primary_yahoo_adv | 0.25 | contaminated+seen / seen | 2266 | 50,000,000 |
-| tsfm_blend | primary_yahoo_adv | 0.5 | contaminated+seen / seen | 2266 | 25,000,000 |
-| tsfm_blend | primary_yahoo_adv | 1.0 | contaminated+seen / seen | 2266 | 10,000,000 |
-| tsfm_blend | low_adv_instruments_impact_off | 0.25 | contaminated+seen / seen | 2266 | 500,000,000 |
-| tsfm_blend | low_adv_instruments_impact_off | 0.5 | contaminated+seen / seen | 2266 | 100,000,000 |
-| tsfm_blend | low_adv_instruments_impact_off | 1.0 | contaminated+seen / seen | 2266 | 50,000,000 |
-| v1_blend | primary_yahoo_adv | 0.25 | contaminated+seen / seen | 2266 | 25,000,000 |
-| v1_blend | primary_yahoo_adv | 0.5 | contaminated+seen / seen | 2266 | 10,000,000 |
-| v1_blend | primary_yahoo_adv | 1.0 | contaminated+seen / seen | 2266 | 10,000,000 |
-| v1_blend | low_adv_instruments_impact_off | 0.25 | contaminated+seen / seen | 2266 | 500,000,000 |
-| v1_blend | low_adv_instruments_impact_off | 0.5 | contaminated+seen / seen | 2266 | 100,000,000 |
-| v1_blend | low_adv_instruments_impact_off | 1.0 | contaminated+seen / seen | 2266 | 50,000,000 |
+| tsfm_blend | primary_yahoo_adv | 0.25 | contaminated+seen / seen | 2294 | 50,000,000 |
+| tsfm_blend | primary_yahoo_adv | 0.5 | contaminated+seen / seen | 2294 | 25,000,000 |
+| tsfm_blend | primary_yahoo_adv | 1.0 | contaminated+seen / seen | 2294 | 10,000,000 |
+| tsfm_blend | low_adv_instruments_impact_off | 0.25 | contaminated+seen / seen | 2294 | 1,000,000,000 |
+| tsfm_blend | low_adv_instruments_impact_off | 0.5 | contaminated+seen / seen | 2294 | 250,000,000 |
+| tsfm_blend | low_adv_instruments_impact_off | 1.0 | contaminated+seen / seen | 2294 | 100,000,000 |
+| v1_blend | primary_yahoo_adv | 0.25 | contaminated+seen / seen | 2294 | 25,000,000 |
+| v1_blend | primary_yahoo_adv | 0.5 | contaminated+seen / seen | 2294 | 10,000,000 |
+| v1_blend | primary_yahoo_adv | 1.0 | contaminated+seen / seen | 2294 | 10,000,000 |
+| v1_blend | low_adv_instruments_impact_off | 0.25 | contaminated+seen / seen | 2294 | 500,000,000 |
+| v1_blend | low_adv_instruments_impact_off | 0.5 | contaminated+seen / seen | 2294 | 100,000,000 |
+| v1_blend | low_adv_instruments_impact_off | 1.0 | contaminated+seen / seen | 2294 | 50,000,000 |
 
 Full AUM grid: `results/v3/tables/e3_costs.csv`.
+
+## Data vintage
+
+Reference vintage: data downloaded **2026-11-21** (last market date 2026-11-20); file hashes in `results/v3/DATA_VINTAGE.md`, copy in `snapshot/`. Every table, run and cache here is regenerated on it. Reason: Yahoo revised history after the first v3 run (downloaded 2026-10-13, ending 2026-10-13; e.g. MXN; the frozen clean model's signals changed on 35 of 2266 dates, max abs 0.23). The old vintage is not recoverable. Two things changed together, so old-to-new differences are not all revisions: (1) revised history; (2) 5 more weeks of data (2026-10-14 to 2026-11-20), which lengthens `recent`, `recent (from 2025-10-01)` and the 2018-01..end rows (labels still read "2026-10"; they mean "to end of data"). The clean model is the frozen `clean_model.pt` (not retrained); the earlier full run retrained it.
+
+| item | old vintage | new vintage |
+|---|---|---|
+| test Sharpe v1_blend / v1_weekly / tsfm_blend / clean_blend | 0.23 / 0.23 / 0.21 / 0.78 | 0.23 / 0.23 / 0.21 / 0.78 |
+| recent Sharpe (same order) | 0.38 / -0.13 / 0.32 / 1.49 | 0.23 / -0.18 / 0.16 / 0.81 |
+| recent from 2025-10-01 Sharpe (same order) | 1.01 / 0.51 / 0.30 / 1.18 | 0.72 / 0.37 / 0.05 / 0.19 |
+| H2 mean path difference, 95% CI, deflated Sharpe | 0.390, [-0.299, 1.075], 0.687 | 0.391, [-0.299, 1.077], 0.690 (still NOT SUPPORTED) |
+| E2 hit rate 2018-01..2025-09 -> after cutoff (tsfm / clean / v1) | 0.522->0.500 / 0.525->0.510 / 0.498->0.462 | 0.522->0.504 / 0.525->0.496 / 0.498->0.468 (still not flagged) |
+| E3 2018+ Sharpe cost x1 (v1 / tsfm) | 0.26 / 0.24 | 0.23 / 0.20 |
+| E3 capacity, tsfm low-ADV, impact off (coef 0.25 / 0.5 / 1.0) | 500m / 100m / 50m | 1,000m / 250m / 100m |
+
+The `recent` changes are mostly the extra five weeks (a weak stretch for the clean and TimesFM books); the development, validation and test periods end before any new data, so their small changes are pure revisions. The TimesFM cache was regenerated in full (35,878 of 153,579 old rows differ by more than 1e-6; max abs signal change 0.149). v1 and v2 results are unchanged and stay sealed on their own vintages.
 
 ## What this does not show
 
