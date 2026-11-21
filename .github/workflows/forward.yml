@@ -26,7 +26,7 @@ jobs:
         run: |
           git config user.name "forward-bot"
           git config user.email "forward-bot@users.noreply.github.com"
-          git add results/v2/forward results/v3/forward results/v3/cache
+          git add results/v2/forward results/v3/forward
           git diff --cached --quiet || git commit -m "forward: $(date -u +%F)"
           git pull --rebase --autostash origin ${{ github.ref_name }}
           git push

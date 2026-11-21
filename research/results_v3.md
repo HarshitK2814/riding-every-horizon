@@ -19,7 +19,7 @@ H2 detail (EXP-v3-003 to 006): clean MLP ann. Sharpe 0.74 (95% CI 0.24 to 1.24, 
 
 ## Seen and contaminated periods (descriptive)
 
-Books: `v1_blend` = v1 horizon blend (daily signal); `v1_weekly` = the same signal refreshed only every 5 days (the TimesFM schedule), to separate the effect of weekly refresh from the forecaster; `tsfm_blend` = TimesFM zero-shot (short/medium/long mean signal, held at most 5 days); `clean_blend` = MLP trained once (seed 0) on feature dates 1999-12-23 to 2017-01-09 (first full feature row to the last date whose 252-day targets end by 2017-12-29; the 252-day purge drops the last year's rows), applied from 2018 on (earlier rows are blank: not computed). Crisis and capacity tables report cumulative returns and capacity, so a Sharpe CI does not apply to them. A full (non-quick) rerun retrains on CUDA and may not be bit-identical; the committed cache in `results/v3/cache/` is the reference. Net of v1 costs. Signal at close t, trade t+1.
+Books: `v1_blend` = v1 horizon blend (daily signal); `v1_weekly` = the same signal refreshed only every 5 days (the TimesFM schedule), to separate the effect of weekly refresh from the forecaster; `tsfm_blend` = TimesFM zero-shot (short/medium/long mean signal, held at most 5 days); `clean_blend` = MLP trained once (seed 0) on feature dates 1999-12-23 to 2017-01-09 (first full feature row to the last date whose 252-day targets end by 2017-12-29; the 252-day purge drops the last year's rows), applied from 2018 on (earlier rows are blank: not computed). Crisis and capacity tables report cumulative returns and capacity, so a Sharpe CI does not apply to them. A full (non-quick) rerun predicts from the frozen `results/v3/cache/clean_model.pt` (never retrains); `results/v3/cache/` is the reference cache. Net of v1 costs. Signal at close t, trade t+1.
 
 | book | period | label | days | ann_ret | ann_vol | sharpe | sharpe_lo | sharpe_hi | maxdd | turnover | cost_ann |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -89,13 +89,13 @@ Hit = sign of the short-horizon signal at close t equals sign of the realised lo
 | tsfm_short | 2018-01..2025-09 (contaminated+seen) | contaminated+seen | 15600 | 0.522 | 0.514 | 0.530 |
 | clean_short | 2018-01..2025-09 (contaminated+seen) | contaminated+seen | 15600 | 0.525 | 0.517 | 0.532 |
 | v1_sign_short | 2018-01..2025-09 (contaminated+seen) | contaminated+seen | 15600 | 0.498 | 0.490 | 0.506 |
-| tsfm_short | 2025-10..2026-09 (seen, after cutoff) | seen, after cutoff | 2145 | 0.504 | 0.483 | 0.525 |
-| clean_short | 2025-10..2026-09 (seen, after cutoff) | seen, after cutoff | 2145 | 0.496 | 0.474 | 0.517 |
-| v1_sign_short | 2025-10..2026-09 (seen, after cutoff) | seen, after cutoff | 2145 | 0.468 | 0.447 | 0.489 |
+| tsfm_short | 2025-10..end of data (2026-11-20) (seen, after cutoff) | seen, after cutoff | 2145 | 0.504 | 0.483 | 0.525 |
+| clean_short | 2025-10..end of data (2026-11-20) (seen, after cutoff) | seen, after cutoff | 2145 | 0.496 | 0.474 | 0.517 |
+| v1_sign_short | 2025-10..end of data (2026-11-20) (seen, after cutoff) | seen, after cutoff | 2145 | 0.468 | 0.447 | 0.489 |
 
 A memorised model would hit more often before the cutoff than after. Compare the TimesFM drop with the v1 sign and clean rows, which cannot have memorised these years. Differences of a point or two are inside the (understated) noise.
 
-**E2 conclusion (prereg rule: flag only a TimesFM-only drop after 2025-10-01).** Hit rate, 2018-01..2025-09 -> 2025-10..2026-09 on the common set: tsfm_short 0.522 -> 0.504 (n 15600 -> 2145); clean_short 0.525 -> 0.496 (n 15600 -> 2145); v1_sign_short 0.498 -> 0.468 (n 15600 -> 2145). Not flagged as memorisation; the drop is shared with the non-TimesFM signals.
+**E2 conclusion (prereg rule: flag only a TimesFM-only drop after 2025-10-01).** Hit rate, 2018-01..2025-09 -> 2025-10..end of data (2026-11-20) on the common set: tsfm_short 0.522 -> 0.504 (n 15600 -> 2145); clean_short 0.525 -> 0.496 (n 15600 -> 2145); v1_sign_short 0.498 -> 0.468 (n 15600 -> 2145). Not flagged as memorisation; the drop is shared with the non-TimesFM signals.
 
 ## Costs and capacity
 
@@ -104,15 +104,15 @@ Cost multiplier (v1 `cost_bp` and roll scaled by 1 or 2; signal at close t, trad
 | book | what | period | label | days | sharpe | sharpe_lo | sharpe_hi |
 |---|---|---|---|---|---|---|---|
 | tsfm_blend | cost x1 | development | contaminated | 3097 | -0.22 | -0.77 | 0.33 |
-| tsfm_blend | cost x1 | 2018-01..2026-10 | contaminated+seen / seen | 2294 | 0.20 | -0.34 | 0.80 |
+| tsfm_blend | cost x1 | 2018-01..2026-11 | contaminated+seen / seen | 2294 | 0.20 | -0.34 | 0.80 |
 | tsfm_blend | cost x2 | development | contaminated | 3097 | -0.30 | -0.85 | 0.25 |
-| tsfm_blend | cost x2 | 2018-01..2026-10 | contaminated+seen / seen | 2294 | 0.13 | -0.41 | 0.72 |
+| tsfm_blend | cost x2 | 2018-01..2026-11 | contaminated+seen / seen | 2294 | 0.13 | -0.41 | 0.72 |
 | v1_blend | cost x1 | development | contaminated | 3097 | 0.48 | -0.13 | 1.03 |
-| v1_blend | cost x1 | 2018-01..2026-10 | contaminated+seen / seen | 2294 | 0.23 | -0.42 | 0.89 |
+| v1_blend | cost x1 | 2018-01..2026-11 | contaminated+seen / seen | 2294 | 0.23 | -0.42 | 0.89 |
 | v1_blend | cost x2 | development | contaminated | 3097 | 0.35 | -0.26 | 0.91 |
-| v1_blend | cost x2 | 2018-01..2026-10 | contaminated+seen / seen | 2294 | 0.10 | -0.56 | 0.76 |
+| v1_blend | cost x2 | 2018-01..2026-11 | contaminated+seen / seen | 2294 | 0.10 | -0.56 | 0.76 |
 
-Capacity: square-root impact with coefficient 0.25 / 0.5 / 1.0, lag 2 (trade at the next close, as in v2 `execution.py`); capacity is the AUM at which net Sharpe falls 0.10 below the USD 10m value; period 2018-01..2026-10. `primary_yahoo_adv` is the upper bound on impact, `low_adv_instruments_impact_off` the lower bound; ADV is Yahoo volume with the v2 data-defect rules. This is a seen-period number, not forward evidence.
+Capacity: square-root impact with coefficient 0.25 / 0.5 / 1.0, lag 2 (trade at the next close, as in v2 `execution.py`); capacity is the AUM at which net Sharpe falls 0.10 below the USD 10m value; period 2018-01..2026-11. `primary_yahoo_adv` is the upper bound on impact, `low_adv_instruments_impact_off` the lower bound; ADV is Yahoo volume with the v2 data-defect rules. This is a seen-period number, not forward evidence.
 
 | book | adv_variant | impact_coef | label | days | capacity_aum_drop0p10 |
 |---|---|---|---|---|---|
@@ -133,7 +133,9 @@ Full AUM grid: `results/v3/tables/e3_costs.csv`.
 
 ## Data vintage
 
-Reference vintage: data downloaded **2026-11-21** (last market date 2026-11-20); file hashes in `results/v3/DATA_VINTAGE.md`, copy in `snapshot/`. Every table, run and cache here is regenerated on it. Reason: Yahoo revised history after the first v3 run (downloaded 2026-10-13, ending 2026-10-13; e.g. MXN; the frozen clean model's signals changed on 35 of 2266 dates, max abs 0.23). The old vintage is not recoverable. Two things changed together, so old-to-new differences are not all revisions: (1) revised history; (2) 5 more weeks of data (2026-10-14 to 2026-11-20), which lengthens `recent`, `recent (from 2025-10-01)` and the 2018-01..end rows (labels still read "2026-10"; they mean "to end of data"). The clean model is the frozen `clean_model.pt` (not retrained); the earlier full run retrained it.
+Reference vintage: data downloaded **2026-11-21** (last market date 2026-11-20); file hashes in `results/v3/DATA_VINTAGE.md`, copy in `snapshot/`. Every table, run and cache here is regenerated on it. Reason: Yahoo revised history after the first v3 run (downloaded 2026-10-13, ending 2026-10-13; e.g. MXN; the frozen clean model's signals changed on 35 of 2266 dates, max abs 0.23). The old vintage is not recoverable. Two things changed together, so old-to-new differences are not all revisions: (1) revised history; (2) 5 more weeks of data (2026-10-14 to 2026-11-20), which lengthens `recent`, `recent (from 2025-10-01)` and the 2018-01..end rows (period labels are generated from the last data date, 2026-11-20). The clean model is the frozen `clean_model.pt` (not retrained); the earlier full run retrained it.
+
+Which data each piece was trained on: the frozen clean model and the H2 CPCV signals were trained on the earlier (revised) vintage (data to 2026-10-13) and are scored on the 2026-11-21 returns; only the TimesFM cache was regenerated on the new vintage.
 
 | item | old vintage | new vintage |
 |---|---|---|
@@ -145,7 +147,7 @@ Reference vintage: data downloaded **2026-11-21** (last market date 2026-11-20);
 | E3 2018+ Sharpe cost x1 (v1 / tsfm) | 0.26 / 0.24 | 0.23 / 0.20 |
 | E3 capacity, tsfm low-ADV, impact off (coef 0.25 / 0.5 / 1.0) | 500m / 100m / 50m | 1,000m / 250m / 100m |
 
-The `recent` changes are mostly the extra five weeks (a weak stretch for the clean and TimesFM books); the development, validation and test periods end before any new data, so their small changes are pure revisions. The TimesFM cache was regenerated in full (35,878 of 153,579 old rows differ by more than 1e-6; max abs signal change 0.149). v1 and v2 results are unchanged and stay sealed on their own vintages.
+The `recent` changes are mostly the extra five weeks (cumulative net return over the 28 added days, 2026-10-14 to 2026-11-20: clean_blend -8.6%, tsfm_blend -2.8%, v1_blend -2.7%); the development, validation and test periods end before any new data, so their small changes are pure revisions. The TimesFM cache was regenerated in full (35,878 of 153,579 old rows differ by more than 1e-6; max abs signal change 0.149). v1 and v2 results are unchanged and stay sealed on their own vintages.
 
 ## What this does not show
 

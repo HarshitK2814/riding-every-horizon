@@ -119,3 +119,9 @@ The H2 deflated Sharpe (EXP-v3-003 to 005) is computed on the 5-path averaged da
 - E3: 2018+ cost x1 Sharpe v1 0.26 -> 0.23, tsfm 0.24 -> 0.20 (days 2266 -> 2294); capacity tsfm low-ADV impact-off 500m/100m/50m -> 1000m/250m/100m; all others unchanged.
 - results_v3.md regenerated; "Data vintage" section added via make_results_v3.py. v1/v2 results unchanged, sealed on their own vintages.
 - TREND_QUICK=1 rerun on the same data reproduces summary_by_period.csv byte-identically. TREND_DATA_DIR is not yet supported in data.py (Task 8), so the snapshot-copy check was skipped.
+
+## EXP-v3-011 forward writes isolated; labels from data end; snapshot eol
+
+- forward.py now writes live signals only to results/v3/forward/ (clean_signal_live.parquet, tsfm_signal_live.parquet, the latter a copy of the reference cache plus appended dates); results/v3/cache/ is never written by it (test added); forward.yml commits only results/v2/forward and results/v3/forward.
+- Period labels (E2 after-cutoff band, E3 period) now generated from the last data date (2026-11-20); results_v3.md stale retrain sentence fixed; 28-day added-period returns stated (clean -8.6%, tsfm -2.8%, v1 -2.7%); data-vintage section says the frozen clean model and H2 CPCV signals were trained on the earlier vintage.
+- `snapshot/** -text` in .gitattributes; cleaning_log.csv re-added so the blob hash matches DATA_VINTAGE.md. No numbers changed (summary_by_period.csv identical).

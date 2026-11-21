@@ -78,9 +78,17 @@ def wilson(k: int, n: int, z: float = 1.96):
     return c - h, c + h
 
 
+END_D = END_M = P_ALL = P_AFTER = ""   # set in main() from the actual last data date
+add28: dict = {}
+
+
 def main() -> None:
+    global END_D, END_M, P_ALL, P_AFTER, add28
     inp = load_inputs(ROOT)
     R = model.prepare(inp["R"])
+    END = R.index[-1]                      # actual last data date; every period label below derives from it
+    END_D, END_M = f"{END:%Y-%m-%d}", f"{END:%Y-%m}"
+    P_ALL, P_AFTER = f"2018-01..{END_M}", f"2025-10..end of data ({END_D})"
     tsfm_long = pd.read_parquet(CACHE / "tsfm_signal.parquet")
     pred_p, sig_p = CACHE / "clean_pred_full.parquet", CACHE / "clean_signal_full.parquet"
     if os.environ.get("TREND_QUICK") == "1":
@@ -100,6 +108,8 @@ def main() -> None:
         res[b] = run_weights(w, Rp, base_cost, lag=1)
         live[b] = w.index[(w.abs().sum(axis=1) > 0).to_numpy()][0]
         net[b] = res[b].net.loc[live[b]:]
+    add28 = {b: float((1 + res[b].net.loc["2026-10-14":]).prod() - 1) for b in ("clean_blend", "tsfm_blend", "v1_blend")}
+    print("added-days returns (lag 1)", add28, "days", len(res["v1_blend"].net.loc["2026-10-14":]))
     # parity: engine lag-1 net for v1_blend must equal the v1 backtest net (as scripts/v2/execution.py)
     v1_bt = model.backtest(inp["R"], inp["inst"], model.TrendConfig.from_yaml(inp["cfg_d"]))["net"]
     cd = res["v1_blend"].net.index.intersection(v1_bt.index)
@@ -156,7 +166,7 @@ def main() -> None:
     }
     bands = {"pre-2018 (contaminated)": (None, pd.Timestamp("2017-12-31")),
              "2018-01..2025-09 (contaminated+seen)": (pd.Timestamp("2018-01-01"), pd.Timestamp("2025-09-30")),
-             "2025-10..2026-09 (seen, after cutoff)": (CUTOFF, None)}
+             f"{P_AFTER} (seen, after cutoff)": (CUTOFF, None)}
     # common observation set: a (date, inst) cell counts within a band only if tsfm, v1 and clean (where it has predictions) are all valid and non-zero
     cdates = fdates.intersection(sig_s["v1_sign_short"].index)
     cols = sig_s["tsfm_short"].columns
@@ -181,7 +191,7 @@ def main() -> None:
             n = int(ok.sum())
             k = int((np.sign(s_[ok]) == np.sign(f_[ok])).sum())
             lo, hi = wilson(k, n)
-            lab = bn[bn.index("(") + 1:-1]
+            lab = bn[bn.rindex("(") + 1:-1]
             hr.append(dict(signal=sn, band=bn, label=lab, n_obs=n, hit_rate=k / n if n else np.nan,
                            wilson_lo=lo, wilson_hi=hi, signal_bar="close t, forecast t+1..t+21",
                            note="obs overlap and are cross-correlated: CI too narrow"))
@@ -204,13 +214,13 @@ def main() -> None:
     fig.savefig(FIG / "e2_memorisation.png", dpi=130)
     plt.close(fig)
 
-    # ---- E3 costs x2 and capacity (2018-01..2026-10, lag 2 as v2 execution.py)
+    # ---- E3 costs x2 and capacity (2018-01..end of data, lag 2 as v2 execution.py)
     e3 = []
     for b in ("tsfm_blend", "v1_blend"):
         Rb = R.reindex(columns=W[b].columns).fillna(0.0)
         for mult in (1, 2):
             rr = run_weights(W[b], Rb, base_cost.scaled(mult), lag=1).net.loc[live[b]:]
-            for pn, r in (("development", sel(rr, "development")), ("2018-01..2026-10", rr.loc["2018-01-01":])):
+            for pn, r in (("development", sel(rr, "development")), (P_ALL, rr.loc["2018-01-01":])):
                 s, lo, hi = sharpe_ci(r)
                 e3.append(dict(book=b, what=f"cost x{mult}", period=pn, label=labels_of(r.index), days=len(r),
                                sharpe=s, sharpe_lo=lo, sharpe_hi=hi, signal_bar="close t, trade t+1",
@@ -234,7 +244,7 @@ def main() -> None:
                 for _, c in cur.iterrows():
                     cap_rows.append(dict(book=b, adv_variant=vn, impact_coef=coef, aum=c["aum"],
                                          net_sharpe_lag2=c["net_sharpe"], capacity_aum_drop0p10=cap,
-                                         period="2018-01..2026-10", label="contaminated+seen / seen",
+                                         period=P_ALL, label="contaminated+seen / seen",
                                          days=len(W[b].loc[sl]), signal_bar="close t, trade t+2 (lag 2)",
                                          costs="v1 cost_bp + roll + sqrt impact"))
     e3 = pd.DataFrame(e3)
@@ -314,7 +324,7 @@ def write_md(summ, crisis, hr, e3, cap):
     else:
         concl = "Not flagged: no TimesFM hit-rate drop after the cutoff."
     e2_concl = (f"**E2 conclusion (prereg rule: flag only a TimesFM-only drop after 2025-10-01).** Hit rate, "
-                f"2018-01..2025-09 -> 2025-10..2026-09 on the common set: {dtxt}. {concl}")
+                f"2018-01..2025-09 -> {P_AFTER} on the common set: {dtxt}. {concl}")
     tbl_e = md_table(e3, ["book", "what", "period", "label", "days", "sharpe", "sharpe_lo", "sharpe_hi"],
                      {"sharpe": "{:.2f}", "sharpe_lo": "{:.2f}", "sharpe_hi": "{:.2f}", "days": "{:d}"})
     capm = cap.drop_duplicates(["book", "adv_variant", "impact_coef"])
@@ -346,7 +356,7 @@ H2 detail (EXP-v3-003 to 006): clean MLP ann. Sharpe {h2['clean_ann_sharpe']:.2f
 
 ## Seen and contaminated periods (descriptive)
 
-Books: `v1_blend` = v1 horizon blend (daily signal); `v1_weekly` = the same signal refreshed only every 5 days (the TimesFM schedule), to separate the effect of weekly refresh from the forecaster; `tsfm_blend` = TimesFM zero-shot (short/medium/long mean signal, held at most 5 days); `clean_blend` = MLP trained once (seed 0) on feature dates 1999-12-23 to 2017-01-09 (first full feature row to the last date whose 252-day targets end by 2017-12-29; the 252-day purge drops the last year's rows), applied from 2018 on (earlier rows are blank: not computed). Crisis and capacity tables report cumulative returns and capacity, so a Sharpe CI does not apply to them. A full (non-quick) rerun retrains on CUDA and may not be bit-identical; the committed cache in `results/v3/cache/` is the reference. Net of v1 costs. Signal at close t, trade t+1.
+Books: `v1_blend` = v1 horizon blend (daily signal); `v1_weekly` = the same signal refreshed only every 5 days (the TimesFM schedule), to separate the effect of weekly refresh from the forecaster; `tsfm_blend` = TimesFM zero-shot (short/medium/long mean signal, held at most 5 days); `clean_blend` = MLP trained once (seed 0) on feature dates 1999-12-23 to 2017-01-09 (first full feature row to the last date whose 252-day targets end by 2017-12-29; the 252-day purge drops the last year's rows), applied from 2018 on (earlier rows are blank: not computed). Crisis and capacity tables report cumulative returns and capacity, so a Sharpe CI does not apply to them. A full (non-quick) rerun predicts from the frozen `results/v3/cache/clean_model.pt` (never retrains); `results/v3/cache/` is the reference cache. Net of v1 costs. Signal at close t, trade t+1.
 
 {tbl_s}
 
@@ -382,7 +392,7 @@ Cost multiplier (v1 `cost_bp` and roll scaled by 1 or 2; signal at close t, trad
 
 {tbl_e}
 
-Capacity: square-root impact with coefficient 0.25 / 0.5 / 1.0, lag 2 (trade at the next close, as in v2 `execution.py`); capacity is the AUM at which net Sharpe falls 0.10 below the USD 10m value; period 2018-01..2026-10. `primary_yahoo_adv` is the upper bound on impact, `low_adv_instruments_impact_off` the lower bound; ADV is Yahoo volume with the v2 data-defect rules. This is a seen-period number, not forward evidence.
+Capacity: square-root impact with coefficient 0.25 / 0.5 / 1.0, lag 2 (trade at the next close, as in v2 `execution.py`); capacity is the AUM at which net Sharpe falls 0.10 below the USD 10m value; period {P_ALL}. `primary_yahoo_adv` is the upper bound on impact, `low_adv_instruments_impact_off` the lower bound; ADV is Yahoo volume with the v2 data-defect rules. This is a seen-period number, not forward evidence.
 
 {tbl_cap}
 
@@ -390,7 +400,9 @@ Full AUM grid: `results/v3/tables/e3_costs.csv`.
 
 ## Data vintage
 
-Reference vintage: data downloaded **2026-11-21** (last market date 2026-11-20); file hashes in `results/v3/DATA_VINTAGE.md`, copy in `snapshot/`. Every table, run and cache here is regenerated on it. Reason: Yahoo revised history after the first v3 run (downloaded 2026-10-13, ending 2026-10-13; e.g. MXN; the frozen clean model's signals changed on 35 of 2266 dates, max abs 0.23). The old vintage is not recoverable. Two things changed together, so old-to-new differences are not all revisions: (1) revised history; (2) 5 more weeks of data (2026-10-14 to 2026-11-20), which lengthens `recent`, `recent (from 2025-10-01)` and the 2018-01..end rows (labels still read "2026-10"; they mean "to end of data"). The clean model is the frozen `clean_model.pt` (not retrained); the earlier full run retrained it.
+Reference vintage: data downloaded **2026-11-21** (last market date 2026-11-20); file hashes in `results/v3/DATA_VINTAGE.md`, copy in `snapshot/`. Every table, run and cache here is regenerated on it. Reason: Yahoo revised history after the first v3 run (downloaded 2026-10-13, ending 2026-10-13; e.g. MXN; the frozen clean model's signals changed on 35 of 2266 dates, max abs 0.23). The old vintage is not recoverable. Two things changed together, so old-to-new differences are not all revisions: (1) revised history; (2) 5 more weeks of data (2026-10-14 to 2026-11-20), which lengthens `recent`, `recent (from 2025-10-01)` and the 2018-01..end rows (period labels are generated from the last data date, {END_D}). The clean model is the frozen `clean_model.pt` (not retrained); the earlier full run retrained it.
+
+Which data each piece was trained on: the frozen clean model and the H2 CPCV signals were trained on the earlier (revised) vintage (data to 2026-10-13) and are scored on the 2026-11-21 returns; only the TimesFM cache was regenerated on the new vintage.
 
 | item | old vintage | new vintage |
 |---|---|---|
@@ -402,7 +414,7 @@ Reference vintage: data downloaded **2026-11-21** (last market date 2026-11-20);
 | E3 2018+ Sharpe cost x1 (v1 / tsfm) | 0.26 / 0.24 | 0.23 / 0.20 |
 | E3 capacity, tsfm low-ADV, impact off (coef 0.25 / 0.5 / 1.0) | 500m / 100m / 50m | 1,000m / 250m / 100m |
 
-The `recent` changes are mostly the extra five weeks (a weak stretch for the clean and TimesFM books); the development, validation and test periods end before any new data, so their small changes are pure revisions. The TimesFM cache was regenerated in full (35,878 of 153,579 old rows differ by more than 1e-6; max abs signal change 0.149). v1 and v2 results are unchanged and stay sealed on their own vintages.
+The `recent` changes are mostly the extra five weeks (cumulative net return over the 28 added days, 2026-10-14 to {END_D}: clean_blend {add28["clean_blend"]:.1%}, tsfm_blend {add28["tsfm_blend"]:.1%}, v1_blend {add28["v1_blend"]:.1%}); the development, validation and test periods end before any new data, so their small changes are pure revisions. The TimesFM cache was regenerated in full (35,878 of 153,579 old rows differ by more than 1e-6; max abs signal change 0.149). v1 and v2 results are unchanged and stay sealed on their own vintages.
 
 ## What this does not show
 

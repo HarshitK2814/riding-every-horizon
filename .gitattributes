@@ -1,6 +1,8 @@
 *.py text eol=lf
 *.md text eol=lf
 *.yaml text eol=lf
+# Data snapshot is hashed in results/v3/DATA_VINTAGE.md: store bytes exactly (no EOL conversion).
+snapshot/** -text
 # Keep the pre-registration byte-exact so its SHA-256 (the test-period key) is the same on every OS.
 # This line must stay last: later lines override earlier ones.
 research/preregistration.md -text

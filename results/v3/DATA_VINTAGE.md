@@ -5,6 +5,7 @@
 - Replaces the 2026-10-13 download (ending 2026-10-13), which Yahoo has since revised (e.g. MXN) and which is not recoverable.
 - All v3 tables, runs, caches and research/results_v3.md are regenerated on this vintage. v1/v2 results stay sealed on their own vintages.
 - A copy of these files is committed under `snapshot/` (reproducibility only).
+- `.gitattributes` marks `snapshot/** -text`, so committed blobs are byte-identical to the hashed files (checked: `git show HEAD:snapshot/<path> | sha256sum` equals the table below).
 - Not read by the v3 pipeline: data/raw/proxies_v2.parquet (v2 audit only; not part of the snapshot).
 
 | file | sha256 |
