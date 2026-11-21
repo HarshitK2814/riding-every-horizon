@@ -59,3 +59,29 @@ def test_fit_predict_learns_obvious_trend_and_is_bounded():
 def test_features_flat_series_has_no_inf():
     R = _R(); R["A"] = 0.0
     assert not np.isinf(features(R).to_numpy()).any()
+
+
+def test_clean_full_training_set_uses_no_post_train_end_returns():
+    from trend.v3.clean_model import _train_xy
+    R = _R(900)
+    te = R.index[600]
+    X, Y = _train_xy(R, str(te.date()))
+    R2 = R.copy(); R2.iloc[601:] = 0.3
+    X2, Y2 = _train_xy(R2, str(te.date()))
+    pd.testing.assert_frame_equal(X, X2)
+    pd.testing.assert_frame_equal(Y, Y2)
+    last = X.index.get_level_values(0).max()
+    assert list(R.index).index(last) <= 600 - 252          # rows within 252 days of train_end dropped
+
+
+def test_clean_full_signal_is_point_in_time_and_deterministic():
+    from trend.v3.clean_model import clean_full_signal
+    R = _R(900)
+    te = str(R.index[600].date())
+    a = clean_full_signal(R, train_end=te, epochs=2)
+    assert a.index.min() > pd.Timestamp(te)
+    R2 = R.copy(); R2.iloc[700:] = 0.2           # changes after 700 must not move predictions before 700
+    b = clean_full_signal(R2, train_end=te, epochs=2)
+    pd.testing.assert_frame_equal(a.loc[:R.index[699]], b.loc[:R.index[699]])
+    c = clean_full_signal(R, train_end=te, epochs=2)
+    pd.testing.assert_frame_equal(a, c)

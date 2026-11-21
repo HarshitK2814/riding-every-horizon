@@ -73,3 +73,31 @@ def fit_predict(X_train: pd.DataFrame, Y_train: pd.DataFrame, X_test: pd.DataFra
 
 def clean_signal(pred: pd.DataFrame) -> pd.DataFrame:
     return pred.mean(axis=1).unstack("inst")
+
+
+H_DEFAULT = {"short": 21, "medium": 63, "long": 252}
+
+
+def _train_xy(R: pd.DataFrame, train_end: str, horizons: dict[str, int] = H_DEFAULT) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Training rows with date <= train_end whose targets are fully known by train_end: rows within
+    max(horizon) trading days of train_end are dropped, so no target uses a post-train_end return."""
+    dates = R.index
+    end_pos = int(dates.searchsorted(pd.Timestamp(train_end), side="right")) - 1
+    last_ok = dates[end_pos - max(horizons.values())]
+    X, Y = features(R), targets(R, horizons)
+    keep = lambda D: D[D.index.get_level_values(0) <= last_ok].dropna()
+    return keep(X), keep(Y)
+
+
+def clean_full_pred(R: pd.DataFrame, train_end: str = "2017-12-31", seed: int = 0, epochs: int = 20) -> pd.DataFrame:
+    """Per-horizon predictions (index date x inst, columns short/medium/long) for all dates after train_end."""
+    Xtr, Ytr = _train_xy(R, train_end)
+    X = features(R)
+    Xte = X[X.index.get_level_values(0) > pd.Timestamp(train_end)].dropna()
+    return fit_predict(Xtr, Ytr, Xte, seed=seed, epochs=epochs)
+
+
+def clean_full_signal(R: pd.DataFrame, train_end: str = "2017-12-31", seed: int = 0, epochs: int = 20) -> pd.DataFrame:
+    """Clean MLP trained once on data up to train_end ("trained pre-2018"); signal for all dates after it
+    (date x inst), known at close t."""
+    return clean_signal(clean_full_pred(R, train_end, seed, epochs))
