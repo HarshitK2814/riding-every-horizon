@@ -19,7 +19,7 @@ H2 detail (EXP-v3-003 to 006): clean MLP ann. Sharpe 0.74 (95% CI 0.24 to 1.24, 
 
 ## Seen and contaminated periods (descriptive)
 
-Books: `v1_blend` = v1 horizon blend (daily signal); `v1_weekly` = the same signal refreshed only every 5 days (the TimesFM schedule), to separate the effect of weekly refresh from the forecaster; `tsfm_blend` = TimesFM zero-shot (short/medium/long mean signal, held at most 5 days); `clean_blend` = MLP trained once on 2001-2017 (seed 0), applied from 2018 on (earlier rows are blank: not computed). Net of v1 costs. Signal at close t, trade t+1.
+Books: `v1_blend` = v1 horizon blend (daily signal); `v1_weekly` = the same signal refreshed only every 5 days (the TimesFM schedule), to separate the effect of weekly refresh from the forecaster; `tsfm_blend` = TimesFM zero-shot (short/medium/long mean signal, held at most 5 days); `clean_blend` = MLP trained once (seed 0) on feature dates 1999-12-23 to 2017-01-09 (first full feature row to the last date whose 252-day targets end by 2017-12-29; the 252-day purge drops the last year's rows), applied from 2018 on (earlier rows are blank: not computed). Crisis and capacity tables report cumulative returns and capacity, so a Sharpe CI does not apply to them. A full (non-quick) rerun retrains on CUDA and may not be bit-identical; the committed cache in `results/v3/cache/` is the reference. Net of v1 costs. Signal at close t, trade t+1.
 
 | book | period | label | days | ann_ret | ann_vol | sharpe | sharpe_lo | sharpe_hi | maxdd | turnover | cost_ann |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -79,24 +79,23 @@ See `results/v3/figures/growth_v3.png` (log growth of the four books, shaded con
 
 ### E2 memorisation check: hit rate before vs after the TimesFM cutoff
 
-Hit = sign of the short-horizon signal at close t equals sign of the realised log return over t+1..t+21, on the TimesFM forecast dates (every 5th day), per instrument; zero signals and zero returns are dropped. `clean_short` is the clean MLP short-horizon head (2018 on only); `v1_sign_short` is the sign of the v1 21-day signal. Wilson 95% CIs; observations overlap in time and are correlated across instruments, so the CIs are too narrow and are shown for scale only. Figure: `results/v3/figures/e2_memorisation.png`.
+Hit = sign of the short-horizon signal at close t equals sign of the realised log return over t+1..t+21, on the TimesFM forecast dates (every 5th day), per instrument; zero signals and zero returns are dropped. `clean_short` is the clean MLP short-horizon head (2018 on only; it has no pre-2018 out-of-fold predictions, so the pre-2018 band compares tsfm and v1 only); within each band all signals are scored on a common observation set (same date x instrument cells, all valid and non-zero); `v1_sign_short` is the sign of the v1 21-day signal. Wilson 95% CIs; observations overlap in time and are correlated across instruments, so the CIs are too narrow and are shown for scale only. Figure: `results/v3/figures/e2_memorisation.png`.
 
 | signal | band | label | n_obs | hit_rate | wilson_lo | wilson_hi |
 |---|---|---|---|---|---|---|
-| tsfm_short | pre-2018 (contaminated) | contaminated | 33201 | 0.511 | 0.506 | 0.517 |
-| tsfm_short | 2018-01..2025-09 (contaminated+seen) | contaminated+seen | 15600 | 0.522 | 0.514 | 0.530 |
-| tsfm_short | 2025-10..2026-09 (seen, after cutoff) | seen, after cutoff | 1911 | 0.500 | 0.477 | 0.522 |
-| tsfm_short | all before 2025-10-01 (contaminated) | contaminated | 48801 | 0.515 | 0.510 | 0.519 |
+| tsfm_short | pre-2018 (contaminated) | contaminated | 33124 | 0.511 | 0.506 | 0.517 |
 | clean_short | pre-2018 (contaminated) | contaminated | 0 |  |  |  |
+| v1_sign_short | pre-2018 (contaminated) | contaminated | 33124 | 0.498 | 0.492 | 0.503 |
+| tsfm_short | 2018-01..2025-09 (contaminated+seen) | contaminated+seen | 15600 | 0.522 | 0.514 | 0.530 |
 | clean_short | 2018-01..2025-09 (contaminated+seen) | contaminated+seen | 15600 | 0.525 | 0.517 | 0.532 |
-| clean_short | 2025-10..2026-09 (seen, after cutoff) | seen, after cutoff | 1911 | 0.510 | 0.487 | 0.532 |
-| clean_short | all before 2025-10-01 (contaminated) | contaminated | 15600 | 0.525 | 0.517 | 0.532 |
-| v1_sign_short | pre-2018 (contaminated) | contaminated | 34099 | 0.498 | 0.493 | 0.503 |
 | v1_sign_short | 2018-01..2025-09 (contaminated+seen) | contaminated+seen | 15600 | 0.498 | 0.490 | 0.506 |
+| tsfm_short | 2025-10..2026-09 (seen, after cutoff) | seen, after cutoff | 1911 | 0.500 | 0.477 | 0.522 |
+| clean_short | 2025-10..2026-09 (seen, after cutoff) | seen, after cutoff | 1911 | 0.510 | 0.487 | 0.532 |
 | v1_sign_short | 2025-10..2026-09 (seen, after cutoff) | seen, after cutoff | 1911 | 0.462 | 0.440 | 0.484 |
-| v1_sign_short | all before 2025-10-01 (contaminated) | contaminated | 49699 | 0.498 | 0.494 | 0.502 |
 
 A memorised model would hit more often before the cutoff than after. Compare the TimesFM drop with the v1 sign and clean rows, which cannot have memorised these years. Differences of a point or two are inside the (understated) noise.
+
+**E2 conclusion (prereg rule: flag only a TimesFM-only drop after 2025-10-01).** Hit rate, 2018-01..2025-09 -> 2025-10..2026-09 on the common set: tsfm_short 0.522 -> 0.500 (n 15600 -> 1911); clean_short 0.525 -> 0.510 (n 15600 -> 1911); v1_sign_short 0.498 -> 0.462 (n 15600 -> 1911). Not flagged as memorisation; the drop is shared with the non-TimesFM signals.
 
 ## Costs and capacity
 
@@ -136,7 +135,7 @@ Full AUM grid: `results/v3/tables/e3_costs.csv`.
 
 - Nothing here is out-of-sample. H1 cannot be read until the forward period has a full year of data (first read 2027-11-30).
 - TimesFM rows before 2025-10-01 may reflect memorisation of the history; E2 is a weak check, not a proof either way.
-- `clean_blend` was trained once on 2001-2017 with fixed settings, but the researcher has seen 2018-2026 results from v1, so even its 2018+ rows are `seen`.
+- `clean_blend` was trained once on feature dates 1999-12-23 to 2017-01-09 (252-day purge before 2018) with fixed settings, but the researcher has seen 2018-2026 results from v1, so even its 2018+ rows are `seen`.
 - Sharpe CIs are wide and differences between books are mostly inside them. No multiple-testing correction is applied to this descriptive table.
 - Costs are v1 linear plus roll costs; impact appears only in the capacity table. Yahoo volume is a weak ADV source.
 - The panel has 39 instruments, not the "37-market" wording in the preregistration.

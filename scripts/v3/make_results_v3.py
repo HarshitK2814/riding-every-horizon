@@ -99,6 +99,11 @@ def main() -> None:
         res[b] = run_weights(w, Rp, base_cost, lag=1)
         live[b] = w.index[(w.abs().sum(axis=1) > 0).to_numpy()][0]
         net[b] = res[b].net.loc[live[b]:]
+    # parity: engine lag-1 net for v1_blend must equal the v1 backtest net (as scripts/v2/execution.py)
+    v1_bt = model.backtest(inp["R"], inp["inst"], model.TrendConfig.from_yaml(inp["cfg_d"]))["net"]
+    cd = res["v1_blend"].net.index.intersection(v1_bt.index)
+    assert len(cd) > 1000 and np.allclose(res["v1_blend"].net.loc[cd].to_numpy(), v1_bt.loc[cd].to_numpy(),
+                                          atol=1e-10, rtol=0), "engine lag1 != v1 backtest net"
     splits = Splits.from_dict(yaml.safe_load((ROOT / "configs/splits_v3.yaml").read_text()))
 
     def sel(x, period):
@@ -150,20 +155,28 @@ def main() -> None:
     }
     bands = {"pre-2018 (contaminated)": (None, pd.Timestamp("2017-12-31")),
              "2018-01..2025-09 (contaminated+seen)": (pd.Timestamp("2018-01-01"), pd.Timestamp("2025-09-30")),
-             "2025-10..2026-09 (seen, after cutoff)": (CUTOFF, None),
-             "all before 2025-10-01 (contaminated)": (None, pd.Timestamp("2025-09-30"))}
+             "2025-10..2026-09 (seen, after cutoff)": (CUTOFF, None)}
+    # common observation set: a (date, inst) cell counts within a band only if tsfm, v1 and clean (where it has predictions) are all valid and non-zero
+    cdates = fdates.intersection(sig_s["v1_sign_short"].index)
+    cols = sig_s["tsfm_short"].columns
+    F = fwd.reindex(index=cdates, columns=cols)
+    Sc = {k: v.reindex(index=cdates, columns=cols) for k, v in sig_s.items()}
+    okc_s = {k: (v.notna() & (v != 0) & F.notna() & (F != 0)).to_numpy() for k, v in Sc.items()}
     hr = []
-    for sn, S in sig_s.items():
-        S = S.reindex(fdates.intersection(S.index))
-        F = fwd.reindex(index=S.index, columns=S.columns)
-        for bn, (a, z) in bands.items():
-            m = pd.Series(True, index=S.index)
-            if a is not None:
-                m &= S.index >= a
-            if z is not None:
-                m &= S.index <= z
-            s_, f_ = S[m.to_numpy()].to_numpy().ravel(), F[m.to_numpy()].to_numpy().ravel()
-            ok = ~np.isnan(s_) & ~np.isnan(f_) & (s_ != 0) & (f_ != 0)
+    for bn, (a, z) in bands.items():
+        m = pd.Series(True, index=cdates)
+        if a is not None:
+            m &= cdates >= a
+        if z is not None:
+            m &= cdates <= z
+        mrow = m.to_numpy()[:, None]
+        # signals with no data at all in this band (clean before 2018) drop out of the intersection
+        use = [k for k in Sc if (okc_s[k] & mrow).any()]
+        okc = np.logical_and.reduce([okc_s[k] for k in use])
+        for sn, S in Sc.items():
+            mm = (mrow & okc) if sn in use else np.zeros_like(okc)
+            s_, f_ = S.to_numpy()[mm], F.to_numpy()[mm]
+            ok = np.ones(len(s_), dtype=bool)
             n = int(ok.sum())
             k = int((np.sign(s_[ok]) == np.sign(f_[ok])).sum())
             lo, hi = wilson(k, n)
@@ -174,7 +187,7 @@ def main() -> None:
     hr = pd.DataFrame(hr)
     hr.to_csv(TAB / "e2_hitrate.csv", index=False)
     fig, ax = plt.subplots(figsize=(8.5, 4.5))
-    bb = [b for b in bands if not b.startswith("all")]
+    bb = list(bands)
     for i, sn in enumerate(sig_s):
         q = hr[(hr.signal == sn) & hr.band.isin(bb)].set_index("band").reindex(bb)
         x = np.arange(len(bb)) + i * 0.2
@@ -284,6 +297,23 @@ def write_md(summ, crisis, hr, e3, cap):
     tbl_c = md_table(cr, ["book", "window", "label", "days", "cum_net_return"], {"cum_net_return": "{:.1%}"})
     tbl_h = md_table(hr, ["signal", "band", "label", "n_obs", "hit_rate", "wilson_lo", "wilson_hi"],
                      {"hit_rate": "{:.3f}", "wilson_lo": "{:.3f}", "wilson_hi": "{:.3f}", "n_obs": "{:d}"})
+    def _hr(sn, key):
+        q = hr[(hr.signal == sn) & hr.band.str.startswith(key)].iloc[0]
+        return q["hit_rate"], int(q["n_obs"])
+    drops = {}
+    for sn in ("tsfm_short", "clean_short", "v1_sign_short"):
+        (h0, n0), (h1, n1) = _hr(sn, "2018-01"), _hr(sn, "2025-10")
+        drops[sn] = (h0, h1, n0, n1)
+    dtxt = "; ".join(f"{k} {v[0]:.3f} -> {v[1]:.3f} (n {v[2]} -> {v[3]})" for k, v in drops.items())
+    fell = {k: v[1] < v[0] for k, v in drops.items()}
+    if fell["tsfm_short"] and not (fell["clean_short"] or fell["v1_sign_short"]):
+        concl = "TimesFM-only drop: FLAGGED as possible memorisation."
+    elif fell["tsfm_short"]:
+        concl = "Not flagged as memorisation; the drop is shared with the non-TimesFM signals."
+    else:
+        concl = "Not flagged: no TimesFM hit-rate drop after the cutoff."
+    e2_concl = (f"**E2 conclusion (prereg rule: flag only a TimesFM-only drop after 2025-10-01).** Hit rate, "
+                f"2018-01..2025-09 -> 2025-10..2026-09 on the common set: {dtxt}. {concl}")
     tbl_e = md_table(e3, ["book", "what", "period", "label", "days", "sharpe", "sharpe_lo", "sharpe_hi"],
                      {"sharpe": "{:.2f}", "sharpe_lo": "{:.2f}", "sharpe_hi": "{:.2f}", "days": "{:d}"})
     capm = cap.drop_duplicates(["book", "adv_variant", "impact_coef"])
@@ -315,7 +345,7 @@ H2 detail (EXP-v3-003 to 006): clean MLP ann. Sharpe {h2['clean_ann_sharpe']:.2f
 
 ## Seen and contaminated periods (descriptive)
 
-Books: `v1_blend` = v1 horizon blend (daily signal); `v1_weekly` = the same signal refreshed only every 5 days (the TimesFM schedule), to separate the effect of weekly refresh from the forecaster; `tsfm_blend` = TimesFM zero-shot (short/medium/long mean signal, held at most 5 days); `clean_blend` = MLP trained once on 2001-2017 (seed 0), applied from 2018 on (earlier rows are blank: not computed). Net of v1 costs. Signal at close t, trade t+1.
+Books: `v1_blend` = v1 horizon blend (daily signal); `v1_weekly` = the same signal refreshed only every 5 days (the TimesFM schedule), to separate the effect of weekly refresh from the forecaster; `tsfm_blend` = TimesFM zero-shot (short/medium/long mean signal, held at most 5 days); `clean_blend` = MLP trained once (seed 0) on feature dates 1999-12-23 to 2017-01-09 (first full feature row to the last date whose 252-day targets end by 2017-12-29; the 252-day purge drops the last year's rows), applied from 2018 on (earlier rows are blank: not computed). Crisis and capacity tables report cumulative returns and capacity, so a Sharpe CI does not apply to them. A full (non-quick) rerun retrains on CUDA and may not be bit-identical; the committed cache in `results/v3/cache/` is the reference. Net of v1 costs. Signal at close t, trade t+1.
 
 {tbl_s}
 
@@ -337,11 +367,13 @@ See `results/v3/figures/growth_v3.png` (log growth of the four books, shaded con
 
 ### E2 memorisation check: hit rate before vs after the TimesFM cutoff
 
-Hit = sign of the short-horizon signal at close t equals sign of the realised log return over t+1..t+21, on the TimesFM forecast dates (every 5th day), per instrument; zero signals and zero returns are dropped. `clean_short` is the clean MLP short-horizon head (2018 on only); `v1_sign_short` is the sign of the v1 21-day signal. Wilson 95% CIs; observations overlap in time and are correlated across instruments, so the CIs are too narrow and are shown for scale only. Figure: `results/v3/figures/e2_memorisation.png`.
+Hit = sign of the short-horizon signal at close t equals sign of the realised log return over t+1..t+21, on the TimesFM forecast dates (every 5th day), per instrument; zero signals and zero returns are dropped. `clean_short` is the clean MLP short-horizon head (2018 on only; it has no pre-2018 out-of-fold predictions, so the pre-2018 band compares tsfm and v1 only); within each band all signals are scored on a common observation set (same date x instrument cells, all valid and non-zero); `v1_sign_short` is the sign of the v1 21-day signal. Wilson 95% CIs; observations overlap in time and are correlated across instruments, so the CIs are too narrow and are shown for scale only. Figure: `results/v3/figures/e2_memorisation.png`.
 
 {tbl_h}
 
 A memorised model would hit more often before the cutoff than after. Compare the TimesFM drop with the v1 sign and clean rows, which cannot have memorised these years. Differences of a point or two are inside the (understated) noise.
+
+{e2_concl}
 
 ## Costs and capacity
 
@@ -359,7 +391,7 @@ Full AUM grid: `results/v3/tables/e3_costs.csv`.
 
 - Nothing here is out-of-sample. H1 cannot be read until the forward period has a full year of data (first read 2027-11-30).
 - TimesFM rows before 2025-10-01 may reflect memorisation of the history; E2 is a weak check, not a proof either way.
-- `clean_blend` was trained once on 2001-2017 with fixed settings, but the researcher has seen 2018-2026 results from v1, so even its 2018+ rows are `seen`.
+- `clean_blend` was trained once on feature dates 1999-12-23 to 2017-01-09 (252-day purge before 2018) with fixed settings, but the researcher has seen 2018-2026 results from v1, so even its 2018+ rows are `seen`.
 - Sharpe CIs are wide and differences between books are mostly inside them. No multiple-testing correction is applied to this descriptive table.
 - Costs are v1 linear plus roll costs; impact appears only in the capacity table. Yahoo volume is a weak ADV source.
 - The panel has 39 instruments, not the "37-market" wording in the preregistration.

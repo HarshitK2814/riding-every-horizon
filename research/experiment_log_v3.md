@@ -93,3 +93,11 @@ The H2 deflated Sharpe (EXP-v3-003 to 005) is computed on the 5-path averaged da
 - Deviation: the panel has 39 instruments; the preregistration says "37-market" (v1 wording). Nothing changed because of it.
 - Choices not in the brief: (a) `recent` period also reported split at 2025-10-01; (b) E2 "clean" hit rate uses the clean MLP short-horizon head (per-horizon predictions cached in `clean_pred_full.parquet`), not the blend; (c) E3 cost x2 and capacity use 2018-01..2026-10 (capacity: lag 2, v2 `execution.py` pattern and both ADV variants); (d) each book starts on its first non-zero-weight day.
 - Re-run with TREND_QUICK=1 (cached clean signal) reproduced the four CSVs byte-for-byte.
+
+## EXP-v3-008 results wording and E2 common-set fixes (2026-11-21)
+- Wording: EXP-v3-007 and results_v3.md said clean_blend was "trained once on 2001-2017". Actual training rows (same logic as `_train_xy`/`clean_full_pred`): feature dates 1999-12-23 to 2017-01-09 (4397 dates, 156857 rows); the 252-day purge drops rows after 2017-01-09 so no target uses post-2017 returns. Not a leak; wording only.
+- E2: removed the duplicate, mislabelled `clean_short` "all before 2025-10-01" row (all four "all before" rows dropped; clean has no pre-2018 predictions). Hit rates now use a common (date, inst) set across tsfm, v1 and clean within each band (pre-2018: tsfm and v1 only). New n: pre-2018 33124, 2018-01..2025-09 15600, after cutoff 1911. Pre-2018 tsfm 0.511 (was 0.511), v1 0.498 (was 0.498); other bands unchanged to 3 dp.
+- E2 conclusion added: 2018-01..2025-09 -> after cutoff: tsfm 0.522 -> 0.500, clean 0.525 -> 0.510, v1 0.498 -> 0.462. All fall; not flagged as memorisation.
+- Added assert: engine lag-1 net for v1_blend equals model.backtest net within 1e-10. Passed.
+- Results note: crisis and capacity tables have no Sharpe CI (cumulative return / capacity); full rerun trains on CUDA, may not be bit-identical, committed cache is the reference.
+- No model, signal or setting changed. Rerun with TREND_QUICK=1; summary_by_period.csv byte-identical.
