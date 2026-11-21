@@ -83,3 +83,6 @@
 - Old: mean_path_diff 0.387, CI [-0.321, 1.069], DSR 0.660 (0.830 across-path var), days 4133, clean Sharpe 0.799 (avg series) / 0.737 (path mean), v1 0.346.
 - New: mean_path_diff 0.390, CI [-0.299, 1.075], DSR 0.687 (0.854 across-path var), days = bootstrap_n = 4128, clean Sharpe 0.741 (path mean) / 0.817 (avg series), v1 0.351.
 - Verdict before: H2 NOT supported. After: H2 NOT supported (unchanged; CI spans 0, DSR < 0.90).
+
+## EXP-v3-006 DSR series note (2026-11-21)
+The H2 deflated Sharpe (EXP-v3-003 to 005) is computed on the 5-path averaged daily return series over the common day set (Sharpe 0.817 ann.), not on the per-path mean (0.741). The averaged series has the higher Sharpe, so this choice favours clean_blend; it still fails the 0.90 bar (0.687). No number changed.
