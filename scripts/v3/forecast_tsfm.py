@@ -1,5 +1,6 @@
 """Generate or extend the TimesFM signal cache (GPU). Idempotent: only dates not yet in the cache are forecast.
-Usage: python scripts/v3/forecast_tsfm.py [--cpu]"""
+Usage: python scripts/v3/forecast_tsfm.py [--cpu]   (--cpu hides the GPU so TimesFM runs on CPU)"""
+import os
 import sys
 from pathlib import Path
 
@@ -13,7 +14,9 @@ CACHE = ROOT / "results" / "v3" / "cache" / "tsfm_signal.parquet"
 H = {"short": 21, "medium": 63, "long": 252}
 
 
-def main() -> None:
+def main(cpu: bool = False) -> None:
+    if cpu:
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""   # read at CUDA init, which happens lazily in TimesFMForecaster
     R = pd.read_parquet(data.PROC / "returns.parquet")
     dates = schedule(R.index, 5)
     old = pd.read_parquet(CACHE) if CACHE.exists() else None
@@ -30,4 +33,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main("--cpu" in sys.argv)
