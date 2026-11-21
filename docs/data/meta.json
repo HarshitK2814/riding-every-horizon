@@ -1,0 +1,140 @@
+{
+ "vintage": "2026-11-21",
+ "first_date": "1999-01-04",
+ "last_date": "2026-11-20",
+ "n_instruments": 39,
+ "tsfm_instruments": 39,
+ "labels": {
+  "seen_start": "2018-01-01",
+  "contam_end": "2025-09-30",
+  "forward_start": "2026-12-01"
+ },
+ "reference": {
+  "book": "v1_blend",
+  "period": "full",
+  "start": "1999-12-24",
+  "end": "2026-11-20",
+  "days": 6942,
+  "sharpe": 0.360648,
+  "engine": "trend.model.backtest",
+  "note": "default settings; the in-browser rerun must match within 0.01"
+ },
+ "periods": [
+  {
+   "book": "v1_blend",
+   "period": "development",
+   "label": "contaminated",
+   "start": "2001-01-02",
+   "end": "2012-12-31",
+   "days": 3097,
+   "sharpe": 0.4756
+  },
+  {
+   "book": "v1_blend",
+   "period": "validation",
+   "label": "contaminated",
+   "start": "2013-01-02",
+   "end": "2017-12-29",
+   "days": 1288,
+   "sharpe": 0.0643
+  },
+  {
+   "book": "v1_blend",
+   "period": "test",
+   "label": "contaminated+seen",
+   "start": "2018-01-02",
+   "end": "2024-12-31",
+   "days": 1807,
+   "sharpe": 0.2276
+  },
+  {
+   "book": "v1_blend",
+   "period": "recent",
+   "label": "contaminated+seen / seen",
+   "start": "2025-01-02",
+   "end": "2026-11-20",
+   "days": 487,
+   "sharpe": 0.2309
+  },
+  {
+   "book": "v1_blend",
+   "period": "recent (to 2025-09-30)",
+   "label": "contaminated+seen",
+   "start": "2025-01-02",
+   "end": "2025-09-30",
+   "days": 193,
+   "sharpe": -0.6262
+  },
+  {
+   "book": "v1_blend",
+   "period": "recent (from 2025-10-01)",
+   "label": "seen",
+   "start": "2025-10-01",
+   "end": "2026-11-20",
+   "days": 294,
+   "sharpe": 0.7152
+  },
+  {
+   "book": "tsfm_blend",
+   "period": "development",
+   "label": "contaminated",
+   "start": "2001-01-02",
+   "end": "2012-12-31",
+   "days": 3097,
+   "sharpe": -0.2156
+  },
+  {
+   "book": "tsfm_blend",
+   "period": "validation",
+   "label": "contaminated",
+   "start": "2013-01-02",
+   "end": "2017-12-29",
+   "days": 1288,
+   "sharpe": 0.5086
+  },
+  {
+   "book": "tsfm_blend",
+   "period": "test",
+   "label": "contaminated+seen",
+   "start": "2018-01-02",
+   "end": "2024-12-31",
+   "days": 1807,
+   "sharpe": 0.2144
+  },
+  {
+   "book": "tsfm_blend",
+   "period": "recent",
+   "label": "contaminated+seen / seen",
+   "start": "2025-01-02",
+   "end": "2026-11-20",
+   "days": 487,
+   "sharpe": 0.1638
+  },
+  {
+   "book": "tsfm_blend",
+   "period": "recent (to 2025-09-30)",
+   "label": "contaminated+seen",
+   "start": "2025-01-02",
+   "end": "2025-09-30",
+   "days": 193,
+   "sharpe": 0.3618
+  },
+  {
+   "book": "tsfm_blend",
+   "period": "recent (from 2025-10-01)",
+   "label": "seen",
+   "start": "2025-10-01",
+   "end": "2026-11-20",
+   "days": 294,
+   "sharpe": 0.0476
+  }
+ ],
+ "bootstrap": {
+  "n_boot": 500,
+  "mean_block": 20,
+  "seed": 0,
+  "paper_n_boot": 2000
+ },
+ "timing": "signal at close t, trade t+1 (lag 1)",
+ "costs": "v1 cost_bp + roll (two trades per roll), x cost multiplier; no impact"
+}

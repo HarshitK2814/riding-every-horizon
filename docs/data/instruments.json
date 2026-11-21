@@ -1,0 +1,197 @@
+{
+ "ES=F": {
+  "sector": "equity",
+  "cost_bp": 0.5,
+  "rolls": 4
+ },
+ "NQ=F": {
+  "sector": "equity",
+  "cost_bp": 0.3,
+  "rolls": 4
+ },
+ "YM=F": {
+  "sector": "equity",
+  "cost_bp": 0.35,
+  "rolls": 4
+ },
+ "NKD=F": {
+  "sector": "equity",
+  "cost_bp": 1.1,
+  "rolls": 4
+ },
+ "^STOXX50E": {
+  "sector": "equity",
+  "cost_bp": 2.0,
+  "rolls": 4
+ },
+ "^FTSE": {
+  "sector": "equity",
+  "cost_bp": 0.85,
+  "rolls": 4
+ },
+ "GC=F": {
+  "sector": "metals",
+  "cost_bp": 0.5,
+  "rolls": 6
+ },
+ "SI=F": {
+  "sector": "metals",
+  "cost_bp": 1.6,
+  "rolls": 6
+ },
+ "HG=F": {
+  "sector": "metals",
+  "cost_bp": 1.2,
+  "rolls": 6
+ },
+ "PL=F": {
+  "sector": "metals",
+  "cost_bp": 2.0,
+  "rolls": 6
+ },
+ "PA=F": {
+  "sector": "metals",
+  "cost_bp": 5.0,
+  "rolls": 6
+ },
+ "CL=F": {
+  "sector": "energy",
+  "cost_bp": 1.4,
+  "rolls": 12
+ },
+ "BZ=F": {
+  "sector": "energy",
+  "cost_bp": 1.4,
+  "rolls": 12
+ },
+ "NG=F": {
+  "sector": "energy",
+  "cost_bp": 3.5,
+  "rolls": 12
+ },
+ "HO=F": {
+  "sector": "energy",
+  "cost_bp": 1.5,
+  "rolls": 12
+ },
+ "RB=F": {
+  "sector": "energy",
+  "cost_bp": 1.5,
+  "rolls": 12
+ },
+ "ZC=F": {
+  "sector": "ags",
+  "cost_bp": 5.5,
+  "rolls": 5
+ },
+ "ZW=F": {
+  "sector": "ags",
+  "cost_bp": 4.3,
+  "rolls": 5
+ },
+ "ZS=F": {
+  "sector": "ags",
+  "cost_bp": 2.1,
+  "rolls": 5
+ },
+ "ZM=F": {
+  "sector": "ags",
+  "cost_bp": 3.0,
+  "rolls": 5
+ },
+ "ZL=F": {
+  "sector": "ags",
+  "cost_bp": 2.8,
+  "rolls": 5
+ },
+ "KC=F": {
+  "sector": "ags",
+  "cost_bp": 3.0,
+  "rolls": 5
+ },
+ "SB=F": {
+  "sector": "ags",
+  "cost_bp": 5.0,
+  "rolls": 5
+ },
+ "CT=F": {
+  "sector": "ags",
+  "cost_bp": 2.5,
+  "rolls": 5
+ },
+ "CC=F": {
+  "sector": "ags",
+  "cost_bp": 4.0,
+  "rolls": 5
+ },
+ "LE=F": {
+  "sector": "ags",
+  "cost_bp": 2.5,
+  "rolls": 5
+ },
+ "HE=F": {
+  "sector": "ags",
+  "cost_bp": 3.0,
+  "rolls": 5
+ },
+ "UST2": {
+  "sector": "rates",
+  "cost_bp": 0.45,
+  "rolls": 4
+ },
+ "UST5": {
+  "sector": "rates",
+  "cost_bp": 0.8,
+  "rolls": 4
+ },
+ "UST10": {
+  "sector": "rates",
+  "cost_bp": 1.3,
+  "rolls": 4
+ },
+ "UST20": {
+  "sector": "rates",
+  "cost_bp": 2.3,
+  "rolls": 4
+ },
+ "EUR": {
+  "sector": "fx",
+  "cost_bp": 0.6,
+  "rolls": 4
+ },
+ "JPY": {
+  "sector": "fx",
+  "cost_bp": 0.9,
+  "rolls": 4
+ },
+ "GBP": {
+  "sector": "fx",
+  "cost_bp": 1.0,
+  "rolls": 4
+ },
+ "AUD": {
+  "sector": "fx",
+  "cost_bp": 1.0,
+  "rolls": 4
+ },
+ "CAD": {
+  "sector": "fx",
+  "cost_bp": 0.9,
+  "rolls": 4
+ },
+ "CHF": {
+  "sector": "fx",
+  "cost_bp": 0.6,
+  "rolls": 4
+ },
+ "NZD": {
+  "sector": "fx",
+  "cost_bp": 1.1,
+  "rolls": 4
+ },
+ "MXN": {
+  "sector": "fx",
+  "cost_bp": 2.5,
+  "rolls": 4
+ }
+}

@@ -1,5 +1,6 @@
 .env
 data/
+!docs/data/
 results/runs/*.parquet
 results/runs/*.log
 __pycache__/

@@ -1,0 +1,48 @@
+{
+ "as_of": null,
+ "v2": {
+  "start": "2026-11-01",
+  "first_read": "2027-11",
+  "books": {
+   "v1_blend": {
+    "dates": [],
+    "cum": [],
+    "days": 0
+   },
+   "garch_blend": {
+    "dates": [],
+    "cum": [],
+    "days": 0
+   }
+  },
+  "last_date": null,
+  "days": 0,
+  "note": "signal at close t, traded at the next close (lag 2); v1 costs, no impact",
+  "source": "https://github.com/HarshitK2814/riding-every-horizon/blob/main/results/v2/forward/forward.csv"
+ },
+ "v3": {
+  "start": "2026-12-01",
+  "first_read": "2027-11-30",
+  "books": {
+   "v1_blend": {
+    "dates": [],
+    "cum": [],
+    "days": 0
+   },
+   "tsfm_blend": {
+    "dates": [],
+    "cum": [],
+    "days": 0
+   },
+   "clean_blend": {
+    "dates": [],
+    "cum": [],
+    "days": 0
+   }
+  },
+  "last_date": null,
+  "days": 0,
+  "note": "signal at close t, traded at the next close (lag 2); v1 costs, no impact",
+  "source": "https://github.com/HarshitK2814/riding-every-horizon/blob/main/results/v3/forward/forward.csv"
+ }
+}

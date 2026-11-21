@@ -1,0 +1,79 @@
+{
+ "v1": {
+  "title": "v1 \u00b7 horizon blend",
+  "period": "test 2018-2024 (pre-registered, monthly)",
+  "source": "https://github.com/HarshitK2814/riding-every-horizon/blob/main/research/results.md",
+  "rows": [
+   {
+    "id": "H1",
+    "claim": "Three-horizon blend has Sharpe > 0 (net, 2018-2024 test)",
+    "result": "Sharpe 0.22, 95% CI [-0.40, 0.75], p = 0.23, 84 months",
+    "status": "not_supported",
+    "explain": "The point estimate is positive, but the interval includes zero: the test years cannot show an edge."
+   },
+   {
+    "id": "H2",
+    "claim": "Blend beats the best single horizon (long, chosen on dev+val)",
+    "result": "difference -0.31, 95% CI [-0.75, 0.19], p = 0.91",
+    "status": "not_supported",
+    "explain": "The 252-day horizon alone did at least as well; mixing horizons did not help (as dev+val predicted)."
+   },
+   {
+    "id": "H3",
+    "claim": "Crisis convexity: c > 0 in r = a + b m + c m\u00b2 (monthly SPY)",
+    "result": "c = 2.68, HAC t = 3.60, p = 0.0002, 84 months",
+    "status": "supported",
+    "explain": "Returns were higher in months when stocks moved a lot either way: the 'crisis smile' held."
+   }
+  ]
+ },
+ "v2": {
+  "title": "v2 \u00b7 risk model & overfitting audit",
+  "period": "2001-2017 (choice period)",
+  "source": "https://github.com/HarshitK2814/riding-every-horizon/blob/main/research/results_v2.md",
+  "rows": [
+   {
+    "id": "H1",
+    "claim": "GARCH tracks the 10% risk target better than EWMA",
+    "result": "EWMA RMSE minus GARCH RMSE -15.117, 95% CI [-18.807, -11.032]",
+    "status": "not_supported",
+    "explain": "GARCH fits blew up on a few instruments, so the plain EWMA risk model tracked the target better."
+   },
+   {
+    "id": "H2",
+    "claim": "v1 is not an overfit pick: PBO < 0.5 and deflated Sharpe > 0.90",
+    "result": "PBO 0.030 (passes); deflated Sharpe 0.081 (fails)",
+    "status": "not_supported",
+    "explain": "The chosen settings were stable inside the 96-config family, but after allowing for 96 tries the Sharpe is not convincingly above zero."
+   },
+   {
+    "id": "H3",
+    "claim": "Crisis alpha follows crash clustering",
+    "result": "intensity coef 0.179, Newey-West t 0.80 (needs > 2), 121 months",
+    "status": "not_supported",
+    "explain": "Months when crashes clustered were not the months trend following earned its crisis gains."
+   }
+  ]
+ },
+ "v3": {
+  "title": "v3 \u00b7 pretrained forecaster",
+  "period": "CPCV 2001-2017; forward from 2026-12-01",
+  "source": "https://github.com/HarshitK2814/riding-every-horizon/blob/main/research/results_v3.md",
+  "rows": [
+   {
+    "id": "H1",
+    "claim": "TimesFM blend beats v1 blend, net Sharpe, forward period (confirmatory)",
+    "result": "no forward data yet; tracking from 2026-12-01, first read 2027-11-30 (\u2265 240 trading days)",
+    "status": "pending",
+    "explain": "Only data neither the model nor the researcher has seen can answer this, so it waits a year."
+   },
+   {
+    "id": "H2",
+    "claim": "A clean model (trained per fold) beats v1 on CPCV 2001-2017",
+    "result": "mean path difference 0.39, 95% CI [-0.30, 1.08]; deflated Sharpe 0.69 (bar 0.90); 5 paths, 4128 days",
+    "status": "not_supported",
+    "explain": "The clean model looked better on average, but the interval spans zero and the deflated Sharpe misses the bar."
+   }
+  ]
+ }
+}
