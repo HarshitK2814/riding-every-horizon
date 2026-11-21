@@ -1,0 +1,29 @@
+{
+  "mean_path_diff": 0.38739411631762455,
+  "ci_lo": -0.298716410830705,
+  "ci_hi": 1.1623353664202687,
+  "dsr_clean": 0.6600896889206009,
+  "n_trials": 98,
+  "paths": 5,
+  "days": 4133,
+  "clean_ann_sharpe": 0.7987898300755559,
+  "v1_ann_sharpe": 0.34561626799411604,
+  "path_diffs": [
+    0.05646801994537498,
+    0.402351025467672,
+    0.32023902103329455,
+    0.516011907407028,
+    0.6419006077347533
+  ],
+  "sr_var": 0.00030187162001605157,
+  "sr_var_note": "v2 family variance of daily Sharpe (96 configs)",
+  "dsr_sensitivity_sr_var_across_paths": 0.8304726512496472,
+  "sr_var_across_paths": 0.00019590376332900955,
+  "bootstrap": {
+    "n_boot": 2000,
+    "mean_block": 21,
+    "stat": "ann Sharpe(mean-path clean) - ann Sharpe(v1)"
+  },
+  "supported": false,
+  "note": "2001-2017 CPCV (6 groups, 2 test, purge 252, embargo 21); signal close t, trade t+1; v1 costs and rolls; not out-of-sample for the researcher; costs/slippage as v1, capacity not assessed. Warm-up days before first full feature row excluded for both books. Design bias: in each split the clean book holds zero positions outside its test groups, so entering a test group incurs entry turnover cost while v1 trades continuously; this is a conservative bias against the clean book."
+}

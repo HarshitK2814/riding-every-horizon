@@ -54,3 +54,8 @@ def test_fit_predict_learns_obvious_trend_and_is_bounded():
     assert set(S.columns) == {"A", "B", "C"}
     P2 = fit_predict(X.loc[tr], Y.loc[tr], X.loc[te], epochs=50, device="cpu")
     pd.testing.assert_frame_equal(P, P2)        # deterministic for a given seed
+
+
+def test_features_flat_series_has_no_inf():
+    R = _R(); R["A"] = 0.0
+    assert not np.isinf(features(R).to_numpy()).any()

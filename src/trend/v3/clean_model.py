@@ -21,7 +21,7 @@ def features(R: pd.DataFrame, com: int = 60) -> pd.DataFrame:
     cols["logvol"] = np.log(sd * np.sqrt(252))
     F = pd.concat({k: v.stack(future_stack=True) for k, v in cols.items()}, axis=1)
     F.index.names = ["date", "inst"]
-    return F
+    return F.replace([np.inf, -np.inf], np.nan)   # sd == 0 gives -inf logvol; callers dropna
 
 
 def targets(R: pd.DataFrame, horizons: dict[str, int], com: int = 60) -> pd.DataFrame:
