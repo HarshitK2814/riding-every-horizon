@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riding Every Horizon</title>
+<meta name="description" content="A pre-registered study of multi-horizon trend following across 39 futures markets. Rerun the backtest in your browser, read the verdicts, follow the forward test.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M3 24 L11 16 L17 20 L29 7' fill='none' stroke='%231f5f5b' stroke-width='3'/%3E%3C/svg%3E">
+<script defer src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+<script defer src="app.js"></script>
+</head>
+<body>
+<a class="skip" href="#lab">Skip to the lab</a>
+
+<header class="mast wrap">
+  <p class="kicker">Trend-following research · three pre-registered rounds · 39 futures markets · 1999–2026</p>
+  <h1>Riding Every Horizon</h1>
+  <p class="deck">Does blending short, medium and long trend signals earn a real edge after costs? And does a
+    pretrained time-series forecaster add anything on top? Each round wrote its tests down before looking.
+    Failed tests stay in.</p>
+</header>
+
+<main>
+<section id="verdicts" class="wrap" aria-labelledby="v-h">
+  <div class="sec-head">
+    <h2 id="v-h">The answer so far</h2>
+    <p class="tally" id="tally" aria-live="polite">Loading verdicts…</p>
+  </div>
+  <div class="vgrid" id="vgrid"></div>
+</section>
+
+<section id="lab" class="wrap" aria-labelledby="lab-h">
+  <div class="sec-head">
+    <h2 id="lab-h">Rerun it</h2>
+    <p class="lede">The real backtest, slimmed to numpy and pandas, running in your browser. Same code path as the
+      paper engine (checked to 1e-12 in the test suite). Every setting you try is a look at data the researcher has
+      already seen: a good-looking number here is exploration, not evidence.</p>
+  </div>
+
+  <p class="loader" id="loader" role="status" aria-live="polite">
+    <span class="dot" aria-hidden="true"></span>
+    <span id="loader-text">Starting…</span>
+    <span class="stages" aria-hidden="true">
+      <span data-stage="runtime">runtime</span><span data-stage="packages">packages</span><span data-stage="data">data</span><span data-stage="ready">ready</span>
+    </span>
+  </p>
+
+  <div class="lab">
+    <form class="controls" id="controls" aria-label="Backtest settings">
+      <fieldset>
+        <legend>Signal</legend>
+        <label class="field" for="signal"><span class="sr">Signal type</span>
+          <select id="signal" name="signal">
+            <option value="tanh">tanh t-stat (v1 default)</option>
+            <option value="sign">sign of trailing return</option>
+            <option value="tsfm">TimesFM zero-shot</option>
+          </select>
+        </label>
+        <div class="checks" id="horizons" role="group" aria-label="Horizons to blend">
+          <label><input type="checkbox" name="h" value="short" checked> 21d</label>
+          <label><input type="checkbox" name="h" value="medium" checked> 63d</label>
+          <label><input type="checkbox" name="h" value="long" checked> 252d</label>
+        </div>
+        <p class="hint" id="h-hint">Horizons blended with equal weight.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Portfolio</legend>
+        <label class="range" for="buffer">No-trade buffer <output id="buffer-o" for="buffer">0.10</output>
+          <input type="range" id="buffer" min="0" max="0.3" step="0.01" value="0.10"></label>
+        <label class="range" for="target_vol">Target volatility <output id="target_vol-o" for="target_vol">10%</output>
+          <input type="range" id="target_vol" min="5" max="20" step="1" value="10"></label>
+        <label class="range" for="cost_mult">Cost multiplier <output id="cost_mult-o" for="cost_mult">1.00×</output>
+          <input type="range" id="cost_mult" min="0" max="3" step="0.25" value="1"></label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Period</legend>
+        <div class="seg" role="radiogroup" aria-label="Date range">
+          <label><input type="radio" name="period" value="full" checked><span>Full</span></label>
+          <label><input type="radio" name="period" value="choice"><span>2001–2017</span></label>
+          <label><input type="radio" name="period" value="seen"><span>2018–2024 seen</span></label>
+          <label><input type="radio" name="period" value="crises"><span>Crises</span></label>
+        </div>
+        <p class="hint" id="p-hint">All data from the first live day.</p>
+      </fieldset>
+
+      <div class="actions">
+        <button type="submit" id="run" disabled>Run</button>
+        <button type="button" id="reset" class="ghost">Defaults</button>
+        <span class="ctime" id="ctime" aria-live="polite"></span>
+      </div>
+    </form>
+
+    <div class="out">
+      <dl class="stats" id="stats" aria-live="polite">
+        <div class="big"><dt>Net Sharpe</dt><dd id="s-sharpe">—</dd><dd class="sub" id="s-ci">95% CI —</dd></div>
+        <div><dt>Days</dt><dd id="s-days">—</dd></div>
+        <div><dt>Ann. return</dt><dd id="s-ret">—</dd></div>
+        <div><dt>Ann. vol</dt><dd id="s-vol">—</dd></div>
+        <div><dt>Max drawdown</dt><dd id="s-dd">—</dd></div>
+        <div><dt>Cost / yr</dt><dd id="s-cost">—</dd></div>
+      </dl>
+      <figure class="chart">
+        <div id="equity" role="img" aria-label="Growth of 1 unit, log scale, with data-label bands"></div>
+        <figcaption>Growth of 1, log scale, net of costs. Bands: <span class="sw sw-c"></span>contaminated
+          (TimesFM may have trained on it) <span class="sw sw-cs"></span>contaminated + seen
+          <span class="sw sw-s"></span>seen <span class="sw sw-f"></span>forward (confirmatory; not in this
+          data vintage).</figcaption>
+      </figure>
+      <p class="check" id="refcheck"></p>
+      <table class="crisis" aria-label="Crisis windows, cumulative net return">
+        <thead><tr><th scope="col">Crisis window</th><th scope="col" class="dates">Dates</th><th scope="col" class="n">Days</th><th scope="col" class="n">Net return</th></tr></thead>
+        <tbody id="crisis"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="forward" class="wrap" aria-labelledby="f-h">
+  <div class="sec-head">
+    <h2 id="f-h">The only test that counts</h2>
+    <p class="lede">Everything above uses history someone has already seen. The forward test does not: books are
+      tracked daily from a date fixed in advance, and nobody can rerun it. Signal at close t, traded at the next close
+      (lag 2), v1 costs, no market impact.</p>
+  </div>
+  <div class="fgrid" id="fgrid"></div>
+</section>
+
+<section id="method" class="wrap" aria-labelledby="m-h">
+  <h2 id="m-h">Method notes</h2>
+  <div class="notes">
+    <div>
+      <h3>Timing</h3>
+      <p>Every signal uses returns up to and including the close of day <span class="m">t</span>. The position earns
+        day <span class="m">t+1</span>. Signals are computed on the full history and only then cut to the chosen
+        period, so a period never changes what was known on a given day.</p>
+    </div>
+    <div>
+      <h3>Costs</h3>
+      <p>Per-instrument one-way cost (v1 <span class="m">cost_bp</span>) on every trade, plus a roll cost of two
+        trades per contract roll, times the cost multiplier. No market impact and no capacity limit in the lab;
+        the paper's capacity table uses square-root impact.</p>
+    </div>
+    <div>
+      <h3>Labels</h3>
+      <p>TimesFM may have been pretrained on these years, so every date before 2025-10-01 is
+        <em>contaminated</em>. From 2018 the researcher had seen v1's results, so those dates are also
+        <em>seen</em>. Only the forward period, from 2026-12-01, is confirmatory.</p>
+    </div>
+    <div>
+      <h3>Uncertainty</h3>
+      <p>Sharpe is annualised from daily net returns. The 95% interval is a stationary bootstrap (mean block 20
+        days, 500 draws, seed 0); the paper tables use 2000 draws, so the lab's interval can differ slightly. v1's
+        headline tests are monthly.</p>
+    </div>
+    <div>
+      <h3>Data</h3>
+      <p>Continuous futures and FX/rates series from free public sources, frozen on <span class="m" id="vintage">2026-11-21</span>
+        (last market date <span class="m" id="lastdate">2026-11-20</span>). Holidays are zero-filled after each
+        market's first observation.</p>
+    </div>
+    <div>
+      <h3>Read the record</h3>
+      <ul class="links">
+        <li><a href="https://github.com/HarshitK2814/riding-every-horizon/blob/main/research/results.md">v1 results</a> ·
+          <a href="https://github.com/HarshitK2814/riding-every-horizon/blob/main/research/preregistration.md">pre-registration</a></li>
+        <li><a href="https://github.com/HarshitK2814/riding-every-horizon/blob/main/research/results_v2.md">v2 results</a> ·
+          <a href="https://github.com/HarshitK2814/riding-every-horizon/blob/main/research/preregistration_v2.md">pre-registration</a></li>
+        <li><a href="https://github.com/HarshitK2814/riding-every-horizon/blob/main/research/results_v3.md">v3 results</a> ·
+          <a href="https://github.com/HarshitK2814/riding-every-horizon/blob/main/research/preregistration_v3.md">pre-registration</a></li>
+        <li><a href="https://github.com/HarshitK2814/riding-every-horizon/blob/main/research/limitations.md">Limitations</a> ·
+          <a href="https://github.com/HarshitK2814/riding-every-horizon/blob/main/research/experiment_log_v3.md">experiment log</a></li>
+        <li><a href="https://github.com/HarshitK2814/riding-every-horizon/blob/main/docs/trend_lite.py">trend_lite.py</a> (the code running here)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="wrap foot">
+  <p>Research artifact, not investment advice. Simulated, net of stated costs.</p>
+  <p class="m small">Data vintage 2026-11-21 · Pyodide 0.26.4 · Plotly 2.35.2</p>
+</footer>
+</body>
+</html>
