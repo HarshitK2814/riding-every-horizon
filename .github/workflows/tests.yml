@@ -9,7 +9,13 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install
-        run: pip install -e qcore -e qengine -e ".[dev]"
+        # CPU torch first (the clean model needs it; timesfm is not needed: quick reads the committed signal caches)
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -e qcore -e qengine -e ".[dev]"
       - name: Test
         # tests use synthetic data only; anything that needs data/ (git-ignored) must skip itself
         run: pytest -q
+      - name: Quick reproduce
+        # snapshot/ data + committed caches -> v3 tables and H2 statistics match the committed ones
+        run: python -m trend.cli quick

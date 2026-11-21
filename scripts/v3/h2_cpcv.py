@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -17,7 +18,9 @@ from trend import data, model
 from trend.v3.clean_model import clean_signal, features, fit_predict, targets
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT_T, OUT_R = ROOT / "results/v3/tables", ROOT / "results/v3/runs"
+OUT = Path(os.environ.get("TREND_OUT_DIR") or ROOT)   # outputs; quick reproduce uses a temp dir. Cached inputs come from ROOT
+OUT_T, OUT_R = OUT / "results/v3/tables", OUT / "results/v3/runs"
+IN_R = ROOT / "results/v3/runs"
 H = {"short": 21, "medium": 63, "long": 252}
 START, END, N_TRIALS = "2001-01-01", "2017-12-31", 98
 V2_AUDIT = ROOT / "results/v2/tables/overfit_audit.json"
@@ -65,7 +68,7 @@ def main(from_cache: bool = False) -> None:
     groups = group_index(dates, 6)
     d0 = X.dropna().index.get_level_values(0).min()          # first date with a full feature row
     oos_sig = {}
-    cached = pd.read_parquet(OUT_R / "clean_signal_cpcv.parquet")["sig"] if from_cache else None
+    cached = pd.read_parquet(IN_R / "clean_signal_cpcv.parquet")["sig"] if from_cache else None
     for tr_pos, te_pos, tg in cpcv_splits(len(dates), n_groups=6, k_test=2, purge=252, embargo=21):
         tr_d, te_d = dates[tr_pos], dates[te_pos]
         if from_cache:

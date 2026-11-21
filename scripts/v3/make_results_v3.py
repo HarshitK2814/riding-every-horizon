@@ -30,7 +30,8 @@ from trend.v3.clean_model import clean_predict_pred, clean_signal
 from trend.v3.labels import period_label
 
 ROOT = Path(__file__).resolve().parents[2]
-TAB, FIG, CACHE = ROOT / "results/v3/tables", ROOT / "results/v3/figures", ROOT / "results/v3/cache"
+OUT = Path(os.environ.get("TREND_OUT_DIR") or ROOT)   # outputs land here (quick reproduce uses a temp dir); inputs always come from ROOT
+TAB, FIG, CACHE = OUT / "results/v3/tables", OUT / "results/v3/figures", ROOT / "results/v3/cache"
 for d in (TAB, FIG, CACHE):
     d.mkdir(parents=True, exist_ok=True)
 PREREG = ROOT / "research" / "preregistration_v3.md"
@@ -294,7 +295,8 @@ def md_table(df: pd.DataFrame, cols: list[str], fmt: dict | None = None) -> str:
 
 
 def write_md(summ, crisis, hr, e3, cap):
-    h2 = json.loads((ROOT / "results/v3/runs/h2.json").read_text())
+    _h2 = OUT / "results/v3/runs/h2.json"
+    h2 = json.loads((_h2 if _h2.exists() else ROOT / "results/v3/runs/h2.json").read_text())
     s_cols = ["book", "period", "label", "days", "ann_ret", "ann_vol", "sharpe", "sharpe_lo", "sharpe_hi",
               "maxdd", "turnover", "cost_ann"]
     sf = {"ann_ret": "{:.1%}", "ann_vol": "{:.1%}", "sharpe": "{:.2f}", "sharpe_lo": "{:.2f}", "sharpe_hi": "{:.2f}",
@@ -425,7 +427,8 @@ The `recent` changes are mostly the extra five weeks (cumulative net return over
 - Costs are v1 linear plus roll costs; impact appears only in the capacity table. Yahoo volume is a weak ADV source.
 - The panel has 39 instruments, not the "37-market" wording in the preregistration.
 """
-    (ROOT / "research/results_v3.md").write_text(md, encoding="utf-8")
+    (OUT / "research").mkdir(parents=True, exist_ok=True)
+    (OUT / "research/results_v3.md").write_text(md, encoding="utf-8")
 
 
 if __name__ == "__main__":

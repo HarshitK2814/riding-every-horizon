@@ -7,6 +7,7 @@ each value it changes so the cleaning can be audited.
 from __future__ import annotations
 
 import io
+import os
 from pathlib import Path
 
 import numpy as np
@@ -15,8 +16,9 @@ import requests
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-RAW = ROOT / "data" / "raw"
-PROC = ROOT / "data" / "processed"
+DATA = Path(os.environ.get("TREND_DATA_DIR") or ROOT / "data")   # `python -m trend.cli quick` points this at a copy of snapshot/
+RAW = DATA / "raw"
+PROC = DATA / "processed"
 
 
 def load_universe() -> dict:
