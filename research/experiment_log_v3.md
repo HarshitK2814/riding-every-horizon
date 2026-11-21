@@ -16,3 +16,9 @@
 - Change: `per_core_batch_size` now passed to ForecastConfig (default 256). Batch-size test on 512 real series, context 1024, horizon 256, RTX 4070 8 GB: 256 -> 2.7 s/512 (peak 4.08 GiB), 128 -> 3.2 s (3.32 GiB), 64 -> 4.5 s (2.55 GiB); no OOM. Chose 256.
 - Probe (same script, shapes and timing only): 390 series in 3.3 s -> 4.28 s per 512 series. Projected full run: 7.8 min (was 454.4 min).
 - Batched (256) vs unbatched (1), 8 series: max abs point diff 2.8e-4 (1.7e-3 of series std); quantiles 4.2e-4 (2.3e-3 of std). Numerical noise (TF32 matmul), not a logic difference.
+
+## EXP-v3-001 freeze
+- Pre-registration frozen: `research/preregistration_v3.md`, dated 2026-11-21, committed alone as `e6f8367` (`prereg-v3: freeze`).
+- PREREG_V3_HASH = `6451a846e036` (sha256[:12] of the frozen file; matches the committed blob).
+- Splits: `configs/splits_v3.yaml`. Period labels: `src/trend/v3/labels.py` (forward starts 2026-12-01).
+- No v3 return, Sharpe or hit-rate statistic computed.
