@@ -63,7 +63,8 @@ def horizon_signal_sign(R: pd.DataFrame, h: int, com: int = 60) -> pd.DataFrame:
 
 
 def raw_positions(R: pd.DataFrame, sector: pd.Series, cfg: TrendConfig,
-                  vol: pd.DataFrame | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
+                  vol: pd.DataFrame | None = None,
+                  sig: pd.DataFrame | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Notional weights before the portfolio vol target: blend of horizon signals, each scaled to
     `instrument_vol`, then equal risk across sectors and equal within a sector.
     `vol` (annualised, known at t) overrides the EWMA vol used for the risk scaling only.
@@ -72,7 +73,10 @@ def raw_positions(R: pd.DataFrame, sector: pd.Series, cfg: TrendConfig,
         vol = ewma_vol(R, cfg.vol_com)
     names = cfg.use or tuple(cfg.horizons)
     sig_fn = horizon_signal if cfg.signal == "tanh" else horizon_signal_sign
-    sig = sum(sig_fn(R, cfg.horizons[n], cfg.vol_com) for n in names) / len(names)
+    if sig is None:                  # v3: a precomputed signal panel (e.g. TimesFM) replaces the horizon blend
+        sig = sum(sig_fn(R, cfg.horizons[n], cfg.vol_com) for n in names) / len(names)
+    else:
+        sig = sig.reindex(index=R.index, columns=R.columns)
     unit = cfg.instrument_vol / vol
     if cfg.sectors is not None:
         keep = sector.reindex(unit.columns).isin(cfg.sectors)
@@ -136,9 +140,9 @@ def costs(W: pd.DataFrame, inst: pd.DataFrame) -> pd.Series:
     return (turnover * c).sum(axis=1) + (W.abs() * 2 * c * rolls).sum(axis=1)
 
 
-def backtest(R: pd.DataFrame, inst: pd.DataFrame, cfg: TrendConfig) -> dict:
+def backtest(R: pd.DataFrame, inst: pd.DataFrame, cfg: TrendConfig, sig: pd.DataFrame | None = None) -> dict:
     R = prepare(R)
-    W0, unit = raw_positions(R, inst["sector"], cfg)
+    W0, unit = raw_positions(R, inst["sector"], cfg, sig=sig)
     k = ewma_cov_scale(R, W0, cfg)
     W = apply_buffer(W0.mul(k, axis=0).fillna(0.0), unit.mul(k, axis=0).fillna(0.0), cfg.buffer)
     Rx = R.reindex(columns=W.columns).fillna(0.0)

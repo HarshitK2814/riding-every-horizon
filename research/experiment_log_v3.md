@@ -22,3 +22,10 @@
 - PREREG_V3_HASH = `6451a846e036` (sha256[:12] of the frozen file; matches the committed blob).
 - Splits: `configs/splits_v3.yaml`. Period labels: `src/trend/v3/labels.py` (forward starts 2026-12-01).
 - No v3 return, Sharpe or hit-rate statistic computed.
+
+## EXP-v3-002 tsfm cache
+- Script: `scripts/v3/forecast_tsfm.py` (defaults: per_core_batch_size 256, chunk 512, context 1024, horizons 21/63/252, cadence 5 days) on RTX 4070.
+- Output: `results/v3/cache/tsfm_signal.parquet`, 152994 rows, 1434 forecast dates (last 2026-10-13), 4.2 MB, run time 308 s.
+- Note: panel has 39 instruments; prereg text says 37 markets (v1 wording) — the design applies to all instruments in data/processed/returns.parquet.
+- Also: `raw_positions`/`backtest` gained an optional `sig` override (None = v1 behaviour, bit-identical; guarded by tests).
+- No return, Sharpe or hit-rate statistic computed.
