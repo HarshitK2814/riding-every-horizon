@@ -15,7 +15,8 @@ jobs:
           pip install -e qcore -e qengine -e ".[dev]"
       - name: Test
         # tests use synthetic data only; anything that needs data/ (git-ignored) must skip itself
-        run: pytest -q
+        # the end-to-end quick test is covered by the explicit "Quick reproduce" step below
+        run: pytest -q -k "not test_quick_runs_and_matches"
       - name: Quick reproduce
         # snapshot/ data + committed caches -> v3 tables and H2 statistics match the committed ones
         run: python -m trend.cli quick

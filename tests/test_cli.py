@@ -5,7 +5,9 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from trend.cli import compare_frames, compare_json
+import importlib.util
+
+from trend.cli import V2_SCRIPTS, compare_frames, compare_json, v2_scripts
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -23,6 +25,16 @@ def test_compare_json():
     compare_json({"a": [1.0, {"b": 2.0}], "s": "x"}, {"a": [1.0 + 1e-9, {"b": 2.0}], "s": "x"}, "j")
     with pytest.raises(AssertionError):
         compare_json({"a": 1.0}, {"a": 1.1}, "j")
+
+
+def test_v2_scripts_skips_pysr_when_missing(monkeypatch):
+    monkeypatch.setattr(importlib.util, "find_spec", lambda name, *a, **k: None)
+    assert "e2_pysr" not in v2_scripts(importlib.util.find_spec("pysr") is not None)
+    assert v2_scripts(False) == [s for s in V2_SCRIPTS if s != "e2_pysr"]
+
+
+def test_v2_scripts_keeps_pysr_when_present():
+    assert v2_scripts(True) == V2_SCRIPTS
 
 
 @pytest.mark.skipif(not (ROOT / "snapshot/processed/returns.parquet").exists(), reason="no snapshot")

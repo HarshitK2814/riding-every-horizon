@@ -7,6 +7,7 @@ full:  re-downloads everything and rebuilds v1, v2, v3 (TimesFM forecasts, clean
 """
 from __future__ import annotations
 
+import importlib.util
 import io
 import json
 import os
@@ -32,6 +33,11 @@ WARNING: `full` rebuilds everything and OVERWRITES the committed caches and resu
   - Numbers can differ from the committed ones: vendors revise data, and GPU runs are not bit-reproducible.
   - The committed artefacts are the reference. `git diff` shows the drift; `git checkout -- results research` restores them.
   - Needs network, hours of compute, and a GPU for TimesFM (it falls back to CPU, much slower)."""
+
+
+def v2_scripts(have_pysr: bool) -> list[str]:
+    """v2 scripts in run order. e2_pysr needs PySR (and Julia); without it, the committed JSON is kept."""
+    return [s for s in V2_SCRIPTS if s != "e2_pysr" or have_pysr]
 
 
 def _run(*args: str, env: dict | None = None) -> None:
@@ -95,7 +101,10 @@ def full() -> None:
     _run("-c", "from trend import data; data.download(); data.build()")   # download() also fetches the FRED macro panel
     _run("scripts/run.py", "dev")
     _run("scripts/run.py", "test", env={"PREREG_HASH": file_hash(V1_PREREG)})
-    for s in V2_SCRIPTS:
+    have_pysr = importlib.util.find_spec("pysr") is not None
+    if not have_pysr:
+        print("skipping v2 E2 (PySR not installed; install with pip install pysr and Julia) — keeping committed results/v2/runs/e2_pysr.json", flush=True)
+    for s in v2_scripts(have_pysr):
         _run(f"scripts/v2/{s}.py", env={"PREREG_HASH": V2_PREREG})
     _run("scripts/v3/forecast_tsfm.py")
     _run("-c", "import pandas as pd; from trend import data; from trend.v3.clean_model import save_clean_model; "
