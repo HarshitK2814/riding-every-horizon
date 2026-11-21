@@ -12,6 +12,7 @@ dependencies = ["numpy>=1.26", "pandas>=2.1", "pyarrow>=14", "scipy>=1.11", "sta
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+v3 = ["torch>=2.3", "timesfm[torch]>=2.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
