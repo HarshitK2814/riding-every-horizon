@@ -4,8 +4,10 @@ Writes docs/data/: returns.csv.gz (snapshot/ vintage, float32, 6 dp), instrument
 (TimesFM signal, blended over horizons and held <= 4 extra rows exactly as trend.v3.books.signal_frame, on the
 returns index), verdicts.json (v1/v2/v3), forward.json (v2 + v3 forward CSVs) and meta.json (reference numbers).
 Signal at close t, trade t+1; v1 costs (cost_bp + roll). Returns always come from snapshot/, never data/.
-Usage: python scripts/v3/export_site_data.py [--forward-only]   (--forward-only rewrites only forward.json;
-the daily forward workflow runs it)
+default_run.json is docs/trend_lite.py's own run_json output for the lab's default settings, so the page can show
+real numbers before the in-browser engine has loaded (the browser then reruns it and checks it against meta.json).
+Usage: python scripts/v3/export_site_data.py [--forward-only | --default-run-only]   (--forward-only rewrites only
+forward.json; the daily forward workflow runs it. --default-run-only rewrites only default_run.json from docs/data)
 """
 from __future__ import annotations
 
@@ -129,11 +131,38 @@ def forward() -> dict:
     return out
 
 
+# the lab's default settings (docs/app.js DEFAULTS, target_vol in decimals as the page sends it)
+LAB_DEFAULT = {"signal": "tanh", "use": ["short", "medium", "long"], "buffer": 0.10, "target_vol": 0.10,
+               "cost_mult": 1.0, "start": None, "end": None, "windows": None}
+
+
+def default_run() -> None:
+    """Run docs/trend_lite.py on the docs/data files exactly as the browser worker does; write default_run.json."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("trend_lite", ROOT / "docs" / "trend_lite.py")
+    tl = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(tl)
+    rb = lambda n: (OUT / n).read_bytes()
+    inp = tl.load_inputs(rb("returns.csv.gz"), (OUT / "instruments.json").read_text(encoding="utf-8"),
+                         rb("tsfm_signal.csv.gz"), rb("tbill.csv.gz"))
+    out = json.loads(tl.run_json(inp, json.dumps(LAB_DEFAULT)))
+    out["equity"] = [round(v, 5) for v in out["equity"]]
+    out["params"] = LAB_DEFAULT
+    out["note"] = "precomputed with docs/trend_lite.py at export; the page reruns it in the browser"
+    (OUT / "default_run.json").write_text(json.dumps(out, separators=(",", ":"), allow_nan=False) + "\n",
+                                          encoding="utf-8")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--forward-only", action="store_true")
+    ap.add_argument("--default-run-only", action="store_true")
     a = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
+    if a.default_run_only:
+        default_run()
+        print("wrote default_run.json")
+        return
     _dump(forward(), "forward.json")
     if a.forward_only:
         print("wrote forward.json")
@@ -183,6 +212,7 @@ def main() -> None:
         bootstrap=dict(n_boot=500, mean_block=20, seed=0, paper_n_boot=2000),
         timing="signal at close t, trade t+1 (lag 1)", costs="v1 cost_bp + roll (two trades per roll), x cost multiplier; no impact",
     ), "meta.json")
+    default_run()
     sizes = {p.name: p.stat().st_size for p in sorted(OUT.iterdir())}
     print("wrote", sizes, "total MB", round(sum(sizes.values()) / 1e6, 2))
 

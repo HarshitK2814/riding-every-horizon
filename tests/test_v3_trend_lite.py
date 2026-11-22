@@ -110,3 +110,15 @@ def test_lite_total_crisis_returns_match_paper_table():
         assert abs(o["crisis"][key]["cum_net_return"] - ref[label]) < 0.005, (label, o["crisis"][key], ref[label])
     # Sharpe stays on excess returns; total = net + rf
     np.testing.assert_allclose((o["total"] - o["net"]).to_numpy(), rf.reindex(o["net"].index).to_numpy(), atol=1e-15)
+
+
+def test_site_default_run_matches_reference():
+    """docs/data/default_run.json (shown before the browser engine loads) agrees with the paper-engine reference."""
+    import json
+    d = ROOT / "docs" / "data"
+    run = json.loads((d / "default_run.json").read_text(encoding="utf-8"))
+    ref = json.loads((d / "meta.json").read_text(encoding="utf-8"))["reference"]
+    assert run["days"] == ref["days"] == len(run["dates"]) == len(run["equity"])
+    assert (run["dates"][0], run["dates"][-1]) == (ref["start"], ref["end"])
+    assert abs(run["sharpe"] - ref["sharpe"]) < 0.01
+    assert run["params"]["signal"] == "tanh" and run["params"]["cost_mult"] == 1.0
