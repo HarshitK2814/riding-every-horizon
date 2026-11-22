@@ -276,7 +276,7 @@ instruction.
 ### Reproduce v3
 
 ```bash
-pip install -e qcore -e qengine -e ".[dev,v3]"
+pip install -c constraints.txt -e qcore -e qengine -e ".[dev,v3]"
 python -m trend.cli quick     # about 2 min, runs from snapshot/, prints QUICK OK   (or: make quick)
 python -m trend.cli full      # re-downloads and rebuilds; NVIDIA GPU recommended for TimesFM;
                               # overwrites committed artefacts, numbers drift with vendor revisions

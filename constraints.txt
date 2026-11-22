@@ -1,0 +1,21 @@
+# Exact versions that produced the committed results (local venv, 2026-11-21). CI and the forward job install
+# with `-c constraints.txt` so reruns match. Newer pandas/numpy (e.g. pandas 3.x) change some outputs.
+arch==8.0.0
+huggingface-hub==0.30.2
+matplotlib==3.10.6
+numpy==2.3.5
+pandas==2.2.3
+pyarrow==24.0.0
+pytest==8.3.5
+python-dateutil==2.9.0.post0
+pytz==2024.2
+PyYAML==6.0.2
+requests==2.34.2
+safetensors==0.5.3
+scikit-learn==1.7.0
+scipy==1.16.0
+statsmodels==0.14.5
+timesfm==3.0.2
+tzdata==2024.2
+yfinance==0.2.65
+torch==2.8.0

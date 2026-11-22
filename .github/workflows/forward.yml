@@ -14,8 +14,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
-      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
-      - run: pip install -e qcore -e qengine -e ".[v3]"
+      - run: pip install "torch==2.8.0" --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -c constraints.txt -e qcore -e qengine -e ".[v3]"
       - name: Cache TimesFM weights
         uses: actions/cache@v4
         with:

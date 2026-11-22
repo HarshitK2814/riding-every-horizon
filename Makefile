@@ -1,6 +1,6 @@
 .PHONY: install test quick full site
 install:
-	pip install -e qcore -e qengine -e ".[dev,v3]"
+	pip install -c constraints.txt -e qcore -e qengine -e ".[dev,v3]"
 test:
 	pytest -q
 quick:
