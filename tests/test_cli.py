@@ -42,3 +42,12 @@ def test_quick_runs_and_matches():
     r = subprocess.run([sys.executable, "-m", "trend.cli", "quick"], cwd=ROOT, capture_output=True, text=True, timeout=1800)
     assert r.returncode == 0, r.stderr[-2000:]
     assert "QUICK OK" in r.stdout
+
+
+def test_compare_frames_per_column_tolerance():
+    import pandas as pd
+    from trend.cli import compare_frames
+    ref = pd.DataFrame({"n_obs": [100], "hit_rate": [0.5000]})
+    compare_frames(ref, pd.DataFrame({"n_obs": [99], "hit_rate": [0.5004]}), "t", atol={"n_obs": 2, "*": 1e-3})
+    with pytest.raises(AssertionError):
+        compare_frames(ref, pd.DataFrame({"n_obs": [96], "hit_rate": [0.5]}), "t", atol={"n_obs": 2, "*": 1e-3})

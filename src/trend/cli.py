@@ -25,7 +25,8 @@ TABLES = ["summary_by_period", "crisis", "e2_hitrate", "e3_costs", "h2_cpcv_path
 ATOL = 1e-6
 # Hit rates count sign agreements; a near-zero signal can flip sign across platforms (Windows vs Linux float
 # summation order), moving a rate by 1/n (about 5e-4 in the smallest band). Returns and Sharpe tables stay at 1e-6.
-TABLE_ATOL = {"e2_hitrate": 1e-3}
+# A value sitting exactly at zero on one CPU and not another can also move n_obs by 1 (seen across CI runners).
+TABLE_ATOL = {"e2_hitrate": {"n_obs": 2, "*": 1e-3}}
 V1_PREREG, V2_PREREG = ROOT / "research/preregistration.md", "2d7828df5093"
 V2_SCRIPTS = ["audit", "risk_h1", "e1_conformal", "e2_pysr", "hawkes_h3", "overfit_audit", "execution",
               "seen_period", "make_results_v2"]          # make_results_v2 reads every other v2 output, so it is last
@@ -52,14 +53,15 @@ def _git_show(rel: str) -> str:
     return subprocess.run(["git", "show", f"HEAD:{rel}"], cwd=ROOT, check=True, capture_output=True).stdout.decode("utf-8")
 
 
-def compare_frames(ref: pd.DataFrame, new: pd.DataFrame, name: str, atol: float = ATOL) -> None:
+def compare_frames(ref: pd.DataFrame, new: pd.DataFrame, name: str, atol: float | dict = ATOL) -> None:
     """Numeric columns equal to atol (NaN matches NaN); every other column exactly equal."""
     assert list(ref.columns) == list(new.columns), f"{name}: columns differ {list(ref.columns)} vs {list(new.columns)}"
     assert len(ref) == len(new), f"{name}: {len(ref)} rows committed, {len(new)} reproduced"
     for c in ref.columns:
         a, b = ref[c], new[c]
         if pd.api.types.is_numeric_dtype(a) and pd.api.types.is_numeric_dtype(b):
-            ok = np.allclose(a.to_numpy(float), b.to_numpy(float), atol=atol, rtol=0, equal_nan=True)
+            tol = atol.get(c, atol.get("*", ATOL)) if isinstance(atol, dict) else atol
+            ok = np.allclose(a.to_numpy(float), b.to_numpy(float), atol=tol, rtol=0, equal_nan=True)
         else:
             ok = a.fillna("").astype(str).equals(b.fillna("").astype(str))
         assert ok, f"{name}: column {c!r} differs from the committed version"
