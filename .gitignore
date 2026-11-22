@@ -1,5 +1,6 @@
 .env
 data/
+!qengine/src/qengine/data/
 !docs/data/
 results/runs/*.parquet
 results/runs/*.log
