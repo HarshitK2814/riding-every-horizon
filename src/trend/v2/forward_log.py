@@ -19,13 +19,15 @@ def append_new(path: str | Path, rows: pd.DataFrame, settled_before: pd.Timestam
     if settled_before is not None:
         rows = rows[rows["date"] < pd.Timestamp(settled_before)]
     if p.exists():
-        old = pd.read_csv(p, parse_dates=["date"])
+        old = pd.read_csv(p, parse_dates=["date"], float_precision="round_trip")
         seen = set(zip(old["date"], old["book"]))
         keep = [(d, b) not in seen for d, b in zip(rows["date"], rows["book"])]
         new = rows[keep]
+        if len(new) == 0:
+            return 0                      # never rewrite the log when nothing is new
         out = pd.concat([old, new], ignore_index=True) if len(new) else old
     else:
         new, out = rows, rows
     out = out.sort_values(["date", "book"]).reset_index(drop=True)
-    out.to_csv(p, index=False, date_format="%Y-%m-%d")
+    out.to_csv(p, index=False, date_format="%Y-%m-%d", float_format="%.17g")
     return len(new)

@@ -40,3 +40,14 @@ def test_update_signals_never_writes_reference_cache(tmp_path, monkeypatch):
     assert set(p.name for p in ref.iterdir()) == set(snap)
     clean_p, tsfm_p = forward.live_paths(fwd)
     assert clean_p.exists() and len(pd.read_parquet(tsfm_p)) == 2
+
+
+def test_append_new_does_not_rewrite_when_nothing_new(tmp_path):
+    p = tmp_path / "f.csv"
+    rows = pd.DataFrame({"date": pd.to_datetime(["2026-12-01"]), "book": "v1_blend",
+                         "net_return": [-0.015821006510229767], "prereg_hash": "abc"})
+    append_new(p, rows)
+    before = p.read_bytes()
+    assert append_new(p, rows) == 0
+    assert p.read_bytes() == before
+    assert pd.read_csv(p, float_precision="round_trip")["net_return"].iloc[0] == -0.015821006510229767
