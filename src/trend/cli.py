@@ -23,6 +23,9 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[2]
 TABLES = ["summary_by_period", "crisis", "e2_hitrate", "e3_costs", "h2_cpcv_paths"]
 ATOL = 1e-6
+# Hit rates count sign agreements; a near-zero signal can flip sign across platforms (Windows vs Linux float
+# summation order), moving a rate by 1/n (about 5e-4 in the smallest band). Returns and Sharpe tables stay at 1e-6.
+TABLE_ATOL = {"e2_hitrate": 1e-3}
 V1_PREREG, V2_PREREG = ROOT / "research/preregistration.md", "2d7828df5093"
 V2_SCRIPTS = ["audit", "risk_h1", "e1_conformal", "e2_pysr", "hawkes_h3", "overfit_audit", "execution",
               "seen_period", "make_results_v2"]          # make_results_v2 reads every other v2 output, so it is last
@@ -87,7 +90,8 @@ def quick() -> None:
         _run("scripts/v3/make_results_v3.py", env=env)
         for name in TABLES:
             rel = f"results/v3/tables/{name}.csv"
-            compare_frames(pd.read_csv(io.StringIO(_git_show(rel))), pd.read_csv(tmp / "out" / rel), name)
+            compare_frames(pd.read_csv(io.StringIO(_git_show(rel))), pd.read_csv(tmp / "out" / rel), name,
+                           atol=TABLE_ATOL.get(name, ATOL))
             print(f"match: {rel}")
         rel = "results/v3/runs/h2.json"
         compare_json(json.loads(_git_show(rel)), json.loads((tmp / "out" / rel).read_text()), "h2.json")
