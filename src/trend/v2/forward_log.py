@@ -9,12 +9,15 @@ import pandas as pd
 COLS = ["date", "book", "net_return", "prereg_hash"]
 
 
-def append_new(path: str | Path, rows: pd.DataFrame) -> int:
-    """Append rows whose (date, book) is not already in the CSV. Returns the number appended."""
+def append_new(path: str | Path, rows: pd.DataFrame, settled_before: pd.Timestamp | None = None) -> int:
+    """Append rows whose (date, book) is not already in the CSV. Returns the number appended.
+    If settled_before is given, rows with date >= settled_before are dropped first (the last bar may be provisional)."""
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     rows = rows[COLS].copy()
     rows["date"] = pd.to_datetime(rows["date"])
+    if settled_before is not None:
+        rows = rows[rows["date"] < pd.Timestamp(settled_before)]
     if p.exists():
         old = pd.read_csv(p, parse_dates=["date"])
         seen = set(zip(old["date"], old["book"]))

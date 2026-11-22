@@ -1,6 +1,8 @@
 name: forward-tracking
 on:
-  schedule: [{cron: "30 23 * * 1-5"}]   # after US close, weekdays
+  # 06:00 UTC Tue-Sat: the prior US session (Mon-Fri) is fully settled, and the CME Globex reopen
+  # (after 22:00 UTC) can no longer leave a provisional last bar. The trackers also drop today's date.
+  schedule: [{cron: "0 6 * * 2-6"}]
   workflow_dispatch: {}
 permissions: {contents: write}
 concurrency: {group: forward-tracking, cancel-in-progress: false}
@@ -19,9 +21,26 @@ jobs:
         with:
           path: ~/.cache/huggingface
           key: hf-google-timesfm-2.5-200m-pytorch-timesfm3.0.2
+      - name: Restore live signal caches (git-ignored *_live.parquet)
+        id: live
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            results/v2/forward/*_live.parquet
+            results/v3/forward/*_live.parquet
+          key: forward-live-${{ github.run_id }}
+          restore-keys: forward-live-
       - run: python scripts/v2/forward.py --refresh
       - run: python scripts/v3/forward.py --refresh-signals
       - run: python scripts/v3/export_site_data.py --forward-only   # refresh docs/data/forward.json for the site
+      - name: Save live signal caches
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            results/v2/forward/*_live.parquet
+            results/v3/forward/*_live.parquet
+          key: forward-live-${{ github.run_id }}
       - name: Commit
         run: |
           git config user.name "forward-bot"

@@ -1,6 +1,6 @@
 """P7 v2 forward paper tracker. Books: v1_blend, garch_blend (no E1/E2 book: neither met its own bar).
 Signal at close t, traded at the next close (lag 2), v1 costs, no impact. Only dates >= the forward start in
-configs/splits_v2.yaml are written, through qcore.splits.select (locked by the v2 prereg hash). Idempotent.
+configs/splits_v2.yaml are written, through qcore.splits.select (locked by the v2 prereg hash). Idempotent. Rows dated today (UTC) or later are never written (bar may be provisional).
 Usage: python scripts/v2/forward.py [--refresh]    (--refresh re-downloads data with the v1 functions first;
 without it the tracker uses the data already on disk, so seen-period numbers cannot shift under us.)"""
 
@@ -20,9 +20,11 @@ from trend import data, macro, model
 from trend.v2.books import build_weights, garch_full, load_inputs
 from trend.v2.forward_log import append_new
 
+SETTLED = pd.Timestamp.now(tz="UTC").normalize().tz_localize(None)   # only dates before today (UTC) are settled
 ROOT = Path(__file__).resolve().parents[2]
 PREREG = ROOT / "research" / "preregistration_v2.md"
 OUT = ROOT / "results" / "v2" / "forward" / "forward.csv"
+GARCH_LIVE = ROOT / "results" / "v2" / "forward" / "garch_vol_live.parquet"   # git-ignored, persisted by actions/cache
 os.environ.setdefault("PREREG_HASH", "2d7828df5093")
 
 
@@ -31,7 +33,7 @@ def main(refresh: bool = False) -> int:
         data.download(); data.build(); macro.download_macro()
     inp = load_inputs(ROOT)
     Rp0 = inp["R"]
-    garch = garch_full(model.prepare(Rp0), ROOT / "results" / "v2" / "runs" / "garch_vol_full.parquet")
+    garch = garch_full(model.prepare(Rp0), GARCH_LIVE)   # sealed runs/garch_vol_full.parquet is never written here
     W, Rp = build_weights(inp, garch)
     cost = CostModel.from_instruments(inp["inst"], 0.0)
     splits = Splits.from_dict(yaml.safe_load((ROOT / "configs" / "splits_v2.yaml").read_text()))
@@ -42,7 +44,7 @@ def main(refresh: bool = False) -> int:
         f = select(net, splits, "forward", PREREG)
         rows.append(pd.DataFrame({"date": f.index, "book": name, "net_return": f.to_numpy(), "prereg_hash": h}))
     rows = pd.concat(rows, ignore_index=True)
-    n_new = append_new(OUT, rows)
+    n_new = append_new(OUT, rows, settled_before=SETTLED)
     log = pd.read_csv(OUT, parse_dates=["date"])
     days = log["date"].nunique()
     print(f"data ends {Rp0.index[-1].date()}; forward start {splits.forward[0]}; new rows {n_new}; "

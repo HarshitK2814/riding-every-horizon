@@ -1,6 +1,6 @@
 """P7 v3 forward tracker (H1). Books v1_blend, tsfm_blend, clean_blend. Signal at close t, traded at the next
 close (lag 2, as v2), v1 costs, no impact. Writes only dates in the v3 'forward' split (locked by the v3 prereg
-hash). Idempotent.
+hash). Idempotent. Rows dated today (UTC) or later are never written (bar may be provisional).
 Usage: python scripts/v3/forward.py [--refresh | --refresh-signals]
 --refresh: re-download data (v1 functions), then as --refresh-signals.
 --refresh-signals: no download; extend a LIVE copy of the TimesFM signals (auto device: GPU if present, else CPU) and
@@ -26,6 +26,7 @@ from trend.v2.forward_log import append_new
 from trend.v3.books import build_v3_weights
 from trend.v3.clean_model import clean_predict
 
+SETTLED = pd.Timestamp.now(tz="UTC").normalize().tz_localize(None)   # only dates before today (UTC) are settled
 ROOT = Path(__file__).resolve().parents[2]
 PREREG = ROOT / "research" / "preregistration_v3.md"
 OUT = ROOT / "results" / "v3" / "forward" / "forward.csv"
@@ -77,7 +78,7 @@ def main(refresh: bool = False, refresh_signals: bool = False) -> int:
         Rp = model.prepare(inp["R"]).reindex(columns=w.columns).fillna(0.0)
         f = select(run_weights(w, Rp, cost, lag=2).net, splits, "forward", PREREG)
         rows.append(pd.DataFrame({"date": f.index, "book": name, "net_return": f.to_numpy(), "prereg_hash": h}))
-    n = append_new(OUT, pd.concat(rows, ignore_index=True))
+    n = append_new(OUT, pd.concat(rows, ignore_index=True), settled_before=SETTLED)
     print(f"data ends {inp['R'].index[-1].date()}; forward start {splits.forward[0]}; new rows {n}")
     return n
 

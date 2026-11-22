@@ -26,3 +26,11 @@ def test_empty_creates_header_only(tmp_path):
     p = tmp_path / "f.csv"
     assert append_new(p, _rows([]).iloc[0:0]) == 0
     assert list(pd.read_csv(p).columns) == ["date", "book", "net_return", "prereg_hash"]
+
+
+def test_settled_before_drops_recent_rows(tmp_path):
+    p = tmp_path / "f.csv"
+    n = append_new(p, _rows(["2026-11-18", "2026-11-19", "2026-11-20"]), settled_before=pd.Timestamp("2026-11-19"))
+    assert n == 1 and pd.read_csv(p)["date"].tolist() == ["2026-11-18"]
+    # the provisional date is written later, once settled
+    assert append_new(p, _rows(["2026-11-19"]), settled_before=pd.Timestamp("2026-11-20")) == 1

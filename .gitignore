@@ -3,6 +3,8 @@ data/
 !docs/data/
 results/runs/*.parquet
 results/runs/*.log
+results/v2/forward/*_live.parquet
+results/v3/forward/*_live.parquet
 __pycache__/
 *.egg-info/
 .ipynb_checkpoints/
