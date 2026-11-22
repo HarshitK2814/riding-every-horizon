@@ -2,7 +2,7 @@
 Signal at close t, trade t+1 (lag=1). Costs: v1 cost_bp + roll. Sharpe 95% stationary-bootstrap CI
 (mean block 20, 2000 draws, seed 0). Everything here is descriptive/exploratory: TimesFM history before
 2025-10-01 is `contaminated`, 2018-01.. is `seen`. Only the forward period is confirmatory.
-TREND_QUICK=1 loads results/v3/cache/clean_signal_full.parquet; the full run predicts from the frozen clean_model.pt (never retrains).
+TREND_QUICK=1 loads results/v3/cache/clean_signal_full.parquet; the default run predicts from the frozen clean_model.pt; `cli full` retrains it.
 Run: python scripts/v3/make_results_v3.py"""
 from __future__ import annotations
 
@@ -358,7 +358,7 @@ H2 detail (EXP-v3-003 to 006): clean MLP ann. Sharpe {h2['clean_ann_sharpe']:.2f
 
 ## Seen and contaminated periods (descriptive)
 
-Books: `v1_blend` = v1 horizon blend (daily signal); `v1_weekly` = the same signal refreshed only every 5 days (the TimesFM schedule), to separate the effect of weekly refresh from the forecaster; `tsfm_blend` = TimesFM zero-shot (short/medium/long mean signal, held at most 5 days); `clean_blend` = MLP trained once (seed 0) on feature dates 1999-12-23 to 2017-01-09 (first full feature row to the last date whose 252-day targets end by 2017-12-29; the 252-day purge drops the last year's rows), applied from 2018 on (earlier rows are blank: not computed). Crisis and capacity tables report cumulative returns and capacity, so a Sharpe CI does not apply to them. A full (non-quick) rerun predicts from the frozen `results/v3/cache/clean_model.pt` (never retrains); `results/v3/cache/` is the reference cache. Net of v1 costs. Signal at close t, trade t+1.
+Books: `v1_blend` = v1 horizon blend (daily signal); `v1_weekly` = the same signal refreshed only every 5 days (the TimesFM schedule), to separate the effect of weekly refresh from the forecaster; `tsfm_blend` = TimesFM zero-shot (short/medium/long mean signal, held at most 5 days); `clean_blend` = MLP trained once (seed 0) on feature dates 1999-12-23 to 2017-01-09 (first full feature row to the last date whose 252-day targets end by 2017-12-29; the 252-day purge drops the last year's rows), applied from 2018 on (earlier rows are blank: not computed). Crisis and capacity tables report cumulative returns and capacity, so a Sharpe CI does not apply to them. `quick` and the default results script use the frozen `results/v3/cache/clean_model.pt`; `full` retrains it (GPU, not bit-identical). `results/v3/cache/` is the reference cache. Net of v1 costs. Timing: signal computed at the close of day t; position held over day t+1 (lag 1); the forward tracker trades one day later (lag 2).
 
 {tbl_s}
 

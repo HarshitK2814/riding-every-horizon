@@ -11,7 +11,7 @@
 
 > **TL;DR.** A long-running systematic manager tells investors, in its fund's annual report, that it trades
 > "predominantly trend-following" models at short, medium and long horizons across six sectors. We rebuilt that
-> design on 37 futures markets with free data, froze three hypotheses, and opened a locked 2018-24 test only
+> design on 37 futures markets (v1 wording; see the note below) with free data, froze three hypotheses, and opened a locked 2018-24 test only
 > afterwards. **It paid in every crisis: +23% in the 2020 crash (S&P 500 -33%) and +13% in 2022 (S&P -17%), with
 > crisis convexity t = 3.6.** Its average return was not significant (Sharpe 0.22), and the slow 12-month signal
 > alone (0.53) beat the three-horizon blend. It tracks the manager's own mutual fund at a 0.52 monthly correlation.
@@ -127,7 +127,7 @@ pytest
 ## 8. Repository map
 
 ```
-configs/        universe (37 markets, per-contract costs), strategy (frozen parameters), period splits
+configs/        universe (37 markets is the v1 wording; the panel has 39 series; per-contract costs), strategy (frozen parameters), period splits
 src/trend/      data.py (download, cleaning), macro.py (carry-correct bonds + FX), model.py, analysis.py
 scripts/        run.py (download / build / dev / test), figures.py
 research/       institutional_methodology, preregistration, experiment_log, results, limitations, sources/
@@ -153,6 +153,8 @@ v1 above is unchanged. Pre-registration v2 hash `2d7828df5093` ([`research/prere
 
 **Timing.** Every signal is computed at the close of day t from data up to and including t. v1 trades at that close
 (`lag=1`); v2 also reports the realistic `lag=2` (trade at the next close).
+
+**Forward log.** The v2 forward tracker started 2026-11-01 but had not run since; its first 15 forward days (to 2026-11-20) were written in one batch on 2026-11-21. Only fully settled dates are appended (the bot runs 06:00 UTC, Tue-Sat).
 
 ### Research -> gap -> solution
 
@@ -220,9 +222,9 @@ Pre-registration v3 hash `6451a846e036` ([`research/preregistration_v3.md`](rese
 
 **Gap.** TimesFM may have seen these years during pretraining, so any historical number for it is `contaminated`.
 Only data after the cutoff, and then only the forward period, can confirm it. The panel has 39 instruments; the
-preregistration says 37 (logged deviation, no rule changed).
+preregistration says 37 (logged deviation, no rule changed). Reconciling: the panel holds 39 series including cash indices, Treasury and FX series; "37 markets" is the v1 wording.
 
-**Timing.** Signal at the close of day t, position held from t+1. Costs are v1 `cost_bp` plus roll costs in every PnL
+**Timing.** Signal computed at the close of day t; position held over day t+1 (lag 1); the forward tracker trades one day later (lag 2). Costs are v1 `cost_bp` plus roll costs in every PnL
 number below; no market impact except in the capacity table.
 
 ```mermaid

@@ -125,3 +125,11 @@ The H2 deflated Sharpe (EXP-v3-003 to 005) is computed on the 5-path averaged da
 - forward.py now writes live signals only to results/v3/forward/ (clean_signal_live.parquet, tsfm_signal_live.parquet, the latter a copy of the reference cache plus appended dates); results/v3/cache/ is never written by it (test added); forward.yml commits only results/v2/forward and results/v3/forward.
 - Period labels (E2 after-cutoff band, E3 period) now generated from the last data date (2026-11-20); results_v3.md stale retrain sentence fixed; 28-day added-period returns stated (clean -8.6%, tsfm -2.8%, v1 -2.7%); data-vintage section says the frozen clean model and H2 CPCV signals were trained on the earlier vintage.
 - `snapshot/** -text` in .gitattributes; cleaning_log.csv re-added so the blob hash matches DATA_VINTAGE.md. No numbers changed (summary_by_period.csv identical).
+
+## EXP-v3-012 pre-push fixes
+
+- Deviation from prereg wording (no number changed): the forecast-grid extension anchors on the last cached date (`extend_schedule`: every 5th trading day after it), not on the panel's first date as the prereg text says. The grids are identical unless the vendor changes the panel start.
+- Forward bot: `*_live.parquet` (v2 GARCH, v3 TimesFM and clean signals) are git-ignored and persisted between runs with actions/cache (restore at start, save at end); scripts start from the reference cache when they are absent. Only CSV/JSON logs and docs/data are committed.
+- Partial bars: `append_new(..., settled_before=)`; both trackers drop rows dated today (UTC) or later. Cron moved to `0 6 * * 2-6`.
+- Sealed v2 cache `results/v2/runs/garch_vol_full.parquet` restored from 5a81236 (f2dab58 had overwritten it); `scripts/v2/forward.py` now writes `results/v2/forward/garch_vol_live.parquet`.
+- Docs only: STATUS.md corrected; results_v3.md retrain wording (`quick` and the default results script use the frozen model; `full` retrains it); README 37 vs 39 series line, v2 forward-batch note, one timing definition (lag 1 research, lag 2 forward tracker). No model, signal, setting or result changed.
