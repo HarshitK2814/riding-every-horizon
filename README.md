@@ -205,3 +205,78 @@ descriptive. E1/E2 are exploratory and never headline. The ManifoldBT parity che
 ```bash
 "$PY" scripts/v2/audit.py && "$PY" scripts/v2/execution.py && "$PY" scripts/v2/overfit_audit.py  && PREREG_HASH=2d7828df5093 "$PY" scripts/v2/risk_h1.py && "$PY" scripts/v2/hawkes_h3.py  && "$PY" scripts/v2/e1_conformal.py && "$PY" scripts/v2/e2_pysr.py && "$PY" scripts/v2/seen_period.py  && "$PY" scripts/v2/forward.py && "$PY" scripts/v2/make_results_v2.py
 ```
+
+## v3: a foundation model as a trend signal
+
+[![tests](https://github.com/HarshitK2814/riding-every-horizon/actions/workflows/tests.yml/badge.svg)](https://github.com/HarshitK2814/riding-every-horizon/actions/workflows/tests.yml)
+[![forward tracking](https://github.com/HarshitK2814/riding-every-horizon/actions/workflows/forward.yml/badge.svg)](https://github.com/HarshitK2814/riding-every-horizon/actions/workflows/forward.yml)
+[![site](https://img.shields.io/badge/site-rerun%20in%20browser-0969da)](https://harshitk2814.github.io/riding-every-horizon/)
+
+**[Rerun the backtest in your browser](https://harshitk2814.github.io/riding-every-horizon/)** (live after the first push; static page, no server).
+
+**Question.** Does a pretrained time-series model (TimesFM 2.5, 200M parameters, zero-shot, no tuning) add anything
+to trend following? Full numbers, all generated from files: [`research/results_v3.md`](research/results_v3.md).
+Pre-registration v3 hash `6451a846e036` ([`research/preregistration_v3.md`](research/preregistration_v3.md), never edited).
+
+**Gap.** TimesFM may have seen these years during pretraining, so any historical number for it is `contaminated`.
+Only data after the cutoff, and then only the forward period, can confirm it. The panel has 39 instruments; the
+preregistration says 37 (logged deviation, no rule changed).
+
+**Timing.** Signal at the close of day t, position held from t+1. Costs are v1 `cost_bp` plus roll costs in every PnL
+number below; no market impact except in the capacity table.
+
+```mermaid
+flowchart LR
+    A["TimesFM 2.5<br/>zero-shot, weekly refresh"] --> B["tsfm_blend<br/>short / medium / long"]
+    C["v1 blend"] --> D["v1_weekly control<br/>same 5-day refresh"]
+    E["Clean MLP<br/>trained on pre-2018 only"] --> F["H2: CPCV 2001-2017<br/>vs v1"]
+    B --> G["H1: forward test<br/>from 2026-12-01"]
+    F --> H["Descriptive 2018-2026<br/>labelled contaminated / seen"]
+    B --> I["E2 memorisation check"]
+```
+
+### Results (read the honest version)
+
+| Question | Verdict | Label |
+|---|---|---|
+| H1: TimesFM adds value (forward, confirmatory) | **Pending**: tracking from 2026-12-01, first read 2027-11-30 | forward, no data yet |
+| H2: a clean (pre-2018) MLP beats v1 under CPCV 2001-2017 | **NOT SUPPORTED**: mean path difference 0.39, 95% CI [-0.30, 1.08] spans zero; deflated Sharpe 0.69 < 0.90 | seen, not out-of-sample; 4128 days |
+| E2 memorisation check (exploratory) | Not flagged: the hit-rate drop after 2025-10 is shared by all signals | exploratory |
+
+Descriptive 2018-2024 (1807 days, net of v1 costs, Sharpe with 95% stationary-bootstrap CI). All of it is `contaminated+seen`, none
+is out-of-sample:
+
+| Book | Sharpe [95% CI] |
+|---|---|
+| v1 blend | 0.23 [-0.52, 0.96] |
+| TimesFM blend | 0.21 [-0.42, 0.90] |
+| Clean MLP (trained on pre-2018 data, applied from 2018) | 0.78 [0.13, 1.46] |
+
+The clean MLP's 2018+ number is the most tempting and the least trustworthy: it was trained before 2018, but the
+researcher had already seen v1's 2018-2026 results, and H2 (its fair test) failed. In the 2020 crash the TimesFM blend lost
+22.1% while v1 gained 22.8% (24 days, same labels). Sharpe differences between books are inside their CIs. Cost x2
+cuts 2018+ Sharpe to 0.13 (TimesFM) and 0.10 (v1). Capacity at a 0.10 Sharpe drop is small with Yahoo volume
+(USD 10-50m for TimesFM, 10-25m for v1 at the 0.25-1.0 impact range, primary ADV; seen period, lag 2).
+
+### Lessons
+
+* The clean control (same inputs, trained pre-2018) is what stops a contaminated result being read as skill.
+* A weekly-refresh v1 control separates "refreshes slowly" from "uses a foundation model".
+* Yahoo revised its history mid-project; the data are frozen in `snapshot/` (vintage 2026-11-21, see
+  `results/v3/DATA_VINTAGE.md`) and the old-vs-new table is in `research/results_v3.md`. The H2 verdict did not change.
+
+### Honesty
+
+Prereg v3 frozen before any v3 statistic. H2 failed and stays in. H1 is untested until a year of forward data exists.
+Nothing here is out-of-sample before the forward period. Research artifact, not investment advice, not a live-trading
+instruction.
+
+### Reproduce v3
+
+```bash
+pip install -e qcore -e qengine -e ".[dev,v3]"
+python -m trend.cli quick     # about 2 min, runs from snapshot/, prints QUICK OK   (or: make quick)
+python -m trend.cli full      # re-downloads and rebuilds; NVIDIA GPU recommended for TimesFM;
+                              # overwrites committed artefacts, numbers drift with vendor revisions
+                              # (git checkout -- results restores). PySR step is skipped unless installed.
+```
