@@ -1,8 +1,11 @@
-/* Riding Every Horizon: page logic. The backtest itself runs in worker.js (Pyodide + trend_lite.py). */
+/* Riding Every Horizon: page logic. The backtest runs in worker.js (Pyodide + trend_lite.py), started only when the
+   lab comes near the viewport or the reader asks for a run. Until then the lab shows data/default_run.json, which is
+   the same code's output for the default settings, computed at export. Charts and theme come from kit/kit.js. */
 (() => {
   "use strict";
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const DAY = 864e5;
   const DEFAULTS = { signal: "tanh", use: ["short", "medium", "long"], buffer: 0.10, target_vol: 10, cost_mult: 1, period: "full" };
   // date-defined windows; same as CRISES in trend_lite.py
   const CRISES = [["2008-01-01", "2008-12-31"], ["2018-10-01", "2018-12-31"], ["2020-02-19", "2020-03-23"], ["2022-01-01", "2022-12-31"]];
@@ -17,96 +20,124 @@
     sign: "Sign of the trailing return per horizon (v1 EXP-001 variant). Flips on noise; trades more.",
     tsfm: "TimesFM 2.5 zero-shot forecasts of 21/63/252-day returns, blended, refreshed weekly, held up to 5 days. Horizons fixed by design.",
   };
-  const LABEL_BANDS = (m) => [
-    { key: "--band-c", name: "contaminated", x0: "1990-01-01", x1: m.labels.seen_start },
-    { key: "--band-cs", name: "contam. + seen", x0: m.labels.seen_start, x1: nextDay(m.labels.contam_end) },
-    { key: "--band-s", name: "seen", x0: nextDay(m.labels.contam_end), x1: m.labels.forward_start },
-    { key: "--band-f", name: "forward", x0: m.labels.forward_start, x1: "2030-01-01" },
-  ];
-  const PILL = { supported: "supported", not_supported: "not supported", pending: "pending" };
+  const PILL = { supported: ["supported", "k-pill--yes"], not_supported: ["not supported", ""], pending: ["pending", "k-pill--wait"] };
+  const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+  const word = (n, cap) => { const w = WORDS[n] || String(n); return cap ? w[0].toUpperCase() + w.slice(1) : w; };
 
-  let META = null, last = null, lastDefault = false, lastDisjoint = false, sentDefault = new Map(), worker = null, ready = false, inflight = false, queued = null, seq = 0, timer = null;
+  let META = null, FIRST_READ = "2027-11-30", last = null, lastDefault = false, lastDisjoint = false, lastLive = false;
+  let worker = null, started = false, ready = false, inflight = false, queued = null, seq = 0, timer = null;
+  const sentDefault = new Map();
 
   function nextDay(d) { const t = new Date(d + "T00:00:00Z"); t.setUTCDate(t.getUTCDate() + 1); return t.toISOString().slice(0, 10); }
-  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
   const fmt = (x, d = 2) => (x == null || !isFinite(x) ? "—" : x.toFixed(d).replace("-", "−"));
   const pct = (x, d = 1) => (x == null || !isFinite(x) ? "—" : (x * 100).toFixed(d).replace("-", "−") + "%");
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const getJSON = (u) => fetch(u).then((r) => { if (!r.ok) throw new Error(u + " " + r.status); return r.json(); });
 
+  const bands = (m, accentLabel) => [
+    { fill: "var(--k-band-1)", label: "contaminated", x0: "1990-01-01", x1: m.labels.seen_start },
+    { fill: "var(--k-band-2)", label: "contaminated + seen", short: "c + s", x0: m.labels.seen_start, x1: nextDay(m.labels.contam_end) },
+    { fill: "var(--k-band-3)", label: "seen", x0: nextDay(m.labels.contam_end), x1: m.labels.forward_start },
+    { fill: "var(--k-accent)", accent: true, label: accentLabel, short: "forward", anchor: "end", x0: m.labels.forward_start, x1: "2030-01-01" },
+  ];
+
   /* ---------- verdicts ---------- */
   function renderVerdicts(v) {
-    const cols = ["v1", "v2", "v3"].map((k) => v[k]);
-    const all = cols.flatMap((c) => c.rows);
+    const cols = ["v1", "v2", "v3"].map((k) => ({ k, ...v[k] }));
+    const all = cols.flatMap((c) => c.rows.map((r) => ({ ...r, round: c.k })));
     const n = (s) => all.filter((r) => r.status === s).length;
     const pend = all.find((r) => r.status === "pending");
-    $("#tally").innerHTML = `<b>${all.length}</b> pre-registered hypotheses · <b>${n("supported")}</b> supported · ` +
-      `<b>${n("not_supported")}</b> not supported · <b>${n("pending")}</b> pending` +
-      (pend ? ` <span class="nowrap">(TimesFM forward test, first read ${esc((pend.result.match(/first read (\S+)/) || [])[1] || "")})</span>` : "");
+    const pendRead = pend ? ((pend.result.match(/first read (\S+)/) || [])[1] || "") : "";
+    if (pendRead) FIRST_READ = pendRead;
+    $("#tally").innerHTML = `<b>${all.length}</b> pre-registered hypotheses: <b>${n("supported")}</b> supported, ` +
+      `<b>${n("not_supported")}</b> not supported, <b>${n("pending")}</b> pending` +
+      (pend ? ` (the TimesFM forward test, first read ${esc(pendRead)}).` : ".");
+    const strip = $("#tally-strip");
+    strip.style.setProperty("--n", all.length);
+    strip.innerHTML = all.map((r) => `<div class="k-tally__cell ${r.status === "supported" ? "is-yes" : r.status === "pending" ? "is-wait" : ""}">` +
+      `<i></i><span>${esc(r.round)} ${esc(r.id)}</span></div>`).join("");
+    // hero and "how" sentences use the same counts
+    $("#h-total").textContent = word(all.length, true);
+    $("#h-yes").textContent = word(n("supported"), true);
+    $("#h-no").textContent = word(n("not_supported"), true);
+    $("#h-wait").textContent = word(n("pending"));
+    $("#how-no").textContent = word(n("not_supported"), true);
+    $("#how-total").textContent = word(all.length);
     $("#vgrid").innerHTML = cols.map((c) => `
-      <article class="vcol">
-        <h3>${esc(c.title)}</h3>
-        <p class="per">${esc(c.period)}</p>
+      <article class="k-verdict" aria-labelledby="vt-${c.k}">
+        <div class="k-verdict__head"><h3 class="k-h3" id="vt-${c.k}">${esc(c.title)}</h3><p class="k-verdict__per">${esc(c.period)}</p></div>
         ${c.rows.map((r) => `
-          <div class="hyp">
-            <div class="hyp-top"><span class="claim"><span class="id">${esc(r.id)}</span>${esc(r.claim)}</span>
-              <span class="pill ${r.status}">${PILL[r.status]}</span></div>
-            <p class="explain">${esc(r.explain)}</p>
-            <div class="result">${esc(r.result)}</div>
+          <div class="k-hyp">
+            <div class="k-hyp__top"><p class="k-hyp__claim"><span class="k-hyp__id">${esc(r.id)}</span>${esc(r.claim)}</p>
+              <span class="k-pill ${PILL[r.status][1]}">${PILL[r.status][0]}</span></div>
+            <p class="k-hyp__explain">${esc(r.explain)}</p>
+            <p class="k-hyp__result">${esc(r.result)}</p>
           </div>`).join("")}
-        <a class="src" href="${esc(c.source)}">Full write-up &rarr;</a>
+        <a class="k-verdict__src" href="${esc(c.source)}">Full ${esc(c.k)} write-up</a>
       </article>`).join("");
   }
 
   /* ---------- forward ---------- */
   function renderForward(f) {
     const today = new Date().toISOString().slice(0, 10);
-    const titles = { v3: "v3 · TimesFM vs v1 vs clean model", v2: "v2 · v1 blend vs GARCH risk model" };
+    const g3 = f.v3;
+    const days = Math.max(0, Math.ceil((Date.parse(g3.first_read) - Date.parse(today)) / DAY));
+    $("#clock-date").textContent = g3.first_read;
+    $("#clock-unit").textContent = days === 1 ? "day" : "days";
+    $("#clock-sub").textContent = (today < g3.start ? `Tracking starts ${g3.start}.` : `Tracking since ${g3.start}.`) +
+      " The pre-registered test needs at least 240 trading days.";
+    $("#clock-tracked").textContent = g3.days;
+    const meter = $("#clock-meter");
+    meter.setAttribute("aria-valuenow", Math.min(240, g3.days));
+    meter.firstElementChild.style.setProperty("--v", Math.min(100, g3.days / 240 * 100).toFixed(1) + "%");
+    meter.firstElementChild.classList.toggle("is-zero", g3.days === 0);
+    const num = $("#clock-days");
+    num.textContent = days;
+    const clock = $("#clock");
+    const count = () => window.Kit && Kit.countUp(num, days, { from: Math.min(days + 365, days * 2), duration: 1300 });
+    clock.classList.contains("is-in") ? null : clock.addEventListener("kit:reveal", count, { once: true });
+
+    const titles = { v3: "v3: TimesFM vs v1 vs clean model", v2: "v2: v1 blend vs GARCH risk model" };
     $("#fgrid").innerHTML = ["v3", "v2"].map((k) => {
       const g = f[k];
-      const books = Object.entries(g.books);
       const status = today < g.start
-        ? `tracking starts <b>${esc(g.start)}</b> · first read ${esc(g.first_read)} · ${esc(g.days)} days tracked`
-        : `tracking since <b>${esc(g.start)}</b> · first read ${esc(g.first_read)} · ${esc(g.days)} days tracked`;
+        ? `Tracking starts ${esc(g.start)}. First read ${esc(g.first_read)}. ${esc(g.days)} days tracked`
+        : `Tracking since ${esc(g.start)}. First read ${esc(g.first_read)}. ${esc(g.days)} days tracked`;
       const body = g.days === 0
-        ? `<div class="fempty">No forward days yet. The daily job appends one row per book per trading day, and this
-             panel updates when it commits. The verdict is read once, on ${esc(g.first_read)}, with the pre-registered test.
-             <span class="m">tracking starts ${esc(g.start)} · first read ${esc(g.first_read)} · 0 days tracked</span></div>`
-        : `<div class="fchart" id="fchart-${k}" role="img" aria-label="${k} forward cumulative net return by book"></div>`;
-      return `<article class="fcard">
-        <h3>${titles[k]}</h3>
-        <p class="fmeta">${status}${g.last_date ? ` · last ${esc(g.last_date)}` : ""}</p>
+        ? `<div class="fcard__empty"><p>No forward days yet. The daily job appends one row per book per trading day, and this
+             panel updates when it commits. The verdict is read once, on ${esc(g.first_read)}, with the pre-registered test.</p></div>`
+        : `<div class="k-chart__plot" id="fchart-${k}" role="group" aria-label="${k} forward cumulative net return by book. Use the arrow keys to read values."></div>
+           <p class="k-sr" aria-live="polite" id="flive-${k}"></p>`;
+      return `<article class="fcard" aria-labelledby="ft-${k}">
+        <h3 class="k-h3" id="ft-${k}">${titles[k]}</h3>
+        <p class="fcard__meta">${status}${g.last_date ? `, last ${esc(g.last_date)}` : ""}.</p>
         ${body}
-        ${books.map(([b, d]) => `<div class="fbook"><span>${esc(b)}</span><span>${esc(d.days)} d · ${d.cum.length ? pct(d.cum[d.cum.length - 1], 2) : "—"}</span></div>`).join("")}
-        <p class="hint">${esc(g.note)} · <a href="${esc(g.source)}">forward.csv</a></p>
+        <dl class="fbooks">${Object.entries(g.books).map(([b, d]) => `<div><dt>${esc(b)}</dt><dd>${esc(d.days)} d, ${d.cum.length ? pct(d.cum[d.cum.length - 1], 2) : "—"}</dd></div>`).join("")}</dl>
+        <p class="k-small k-muted">${esc(g.note)}. Data: <a href="${esc(g.source)}">forward.csv</a></p>
       </article>`;
     }).join("");
-    if (!window.Plotly) return;
     for (const k of ["v3", "v2"]) {
       const el = $("#fchart-" + k);
-      if (!el) continue;
-      const traces = Object.entries(f[k].books).filter(([, d]) => d.dates.length).map(([b, d], i) => ({
-        x: d.dates, y: d.cum.map((c) => c * 100), name: b, mode: "lines",
-        line: { width: i === 0 ? 2 : 1.4, color: i === 0 ? css("--accent") : (i === 1 ? css("--ink") : css("--muted")) },
-        hovertemplate: "%{x|%Y-%m-%d}  %{y:.2f}%<extra>" + b + "</extra>",
-      }));
-      Plotly.react(el, traces, baseLayout({ yaxis: { ticksuffix: "%" }, showlegend: true,
-        legend: { orientation: "h", y: 1.12, x: 0, font: { size: 10 } } }), { displayModeBar: false, responsive: true });
+      if (!el || !window.Kit) continue;
+      const books = Object.entries(f[k].books).filter(([, d]) => d.dates.length);
+      const cls = [null, "k-line k-line--2", "k-line k-line--3"];
+      Kit.lineChart(el, {
+        series: books.map(([b, d], i) => ({ name: b, x: d.dates, y: d.cum, cls: cls[i], endLabel: true })),
+        includeZero: true, yTick: (v) => (v * 100).toFixed(1).replace("-", "−") + "%", live: $("#flive-" + k),
+        tip: (i, date) => date + "  " + books.map(([b, d]) => `${b} ${pct(d.cum[d.dates.indexOf(date)], 2)}`).join("  "),
+      });
     }
   }
 
-  function baseLayout(extra = {}) {
-    const ink = css("--ink-2"), grid = css("--rule-2");
-    const L = {
-      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
-      font: { family: "IBM Plex Mono, ui-monospace, monospace", size: 11, color: ink },
-      margin: { l: 46, r: 10, t: 26, b: 34 }, hovermode: "x", showlegend: false,
-      xaxis: { gridcolor: grid, linecolor: css("--rule"), zeroline: false, fixedrange: false },
-      yaxis: { gridcolor: grid, linecolor: css("--rule"), zeroline: false },
-      hoverlabel: { font: { family: "IBM Plex Mono, monospace", size: 11 } },
-    };
-    for (const [k, v] of Object.entries(extra)) L[k] = typeof v === "object" && !Array.isArray(v) && L[k] ? { ...L[k], ...v } : v;
-    return L;
+  /* ---------- hero ---------- */
+  function renderHero(o) {
+    if (!o || !window.Kit) return;
+    $("#hs-span").textContent = `${o.dates[0]} to ${o.dates[o.dates.length - 1]}`;
+    $("#hs-ci").textContent = `95% CI [${fmt(o.sharpe_lo)}, ${fmt(o.sharpe_hi)}]`;
+    Kit.countUp($("#hs-sharpe"), o.sharpe, { format: (v) => fmt(v), label: "Net Sharpe" });
+    Kit.countUp($("#hs-dd"), o.maxdd, { format: (v) => pct(v), label: "Max drawdown" });
+    Kit.countUp($("#hs-days"), o.days, { format: (v) => Math.round(v).toLocaleString("en-US"), label: "Trading days" });
+    drawEquity($("#hero-plot"), o, { animate: true, live: $("#hero-live"), accentLabel: "forward test" });
   }
 
   /* ---------- lab ---------- */
@@ -131,8 +162,9 @@
     $("#buffer-o").textContent = (+$("#buffer").value).toFixed(2);
     $("#target_vol-o").textContent = $("#target_vol").value + "%";
     $("#cost_mult-o").textContent = (+$("#cost_mult").value).toFixed(2) + "×";
+    $$(".k-range").forEach((r) => r.style.setProperty("--pct", ((r.value - r.min) / (r.max - r.min) * 100) + "%"));
     const tsfm = $("#signal").value === "tsfm";
-    $("#horizons").classList.toggle("off", tsfm);
+    $("#horizons-set").classList.toggle("is-off", tsfm);
     $$("input[name=h]").forEach((i) => { i.disabled = tsfm; });
     const checked = $$("input[name=h]:checked");
     if (checked.length === 1) checked[0].disabled = true;     // at least one horizon
@@ -142,9 +174,10 @@
 
   function schedule(delay = 350) {
     syncControls();
-    if (!ready) return;
+    startWorker();
+    if (!ready) return;                       // the run happens as soon as the engine is ready
     clearTimeout(timer);
-    $(".out").classList.add("stale");
+    $("#out").classList.add("is-stale");
     timer = setTimeout(send, delay);
   }
 
@@ -153,6 +186,7 @@
     if (inflight) { queued = { p, d: isDefault(), j: !!p.windows }; return; }
     inflight = true;
     $("#ctime").textContent = "computing…";
+    $("#out").setAttribute("aria-busy", "true");
     post(p, isDefault(), !!p.windows);
   }
 
@@ -161,9 +195,9 @@
   function onResult(m) {
     inflight = false;
     if (queued) { const q = queued; queued = null; inflight = true; post(q.p, q.d, q.j); }
-    else $(".out").classList.remove("stale");
+    else { $("#out").classList.remove("is-stale"); $("#out").setAttribute("aria-busy", "false"); }
     const sent = sentDefault.get(m.id) || {};
-    last = m.out; lastDefault = !!sent.d; lastDisjoint = !!sent.j; sentDefault.delete(m.id);
+    last = m.out; lastDefault = !!sent.d; lastDisjoint = !!sent.j; lastLive = true; sentDefault.delete(m.id);
     $("#ctime").textContent = `computed in ${(m.ms / 1000).toFixed(2)} s`;
     renderResult(m.out);
   }
@@ -178,84 +212,86 @@
     $("#s-dd").textContent = pct(o.maxdd);
     $("#s-cost").textContent = pct(o.cost_ann, 2);
     const ref = META && META.reference;
-    if (ref && lastDefault && o.sharpe != null) {
+    if (!lastLive) {
+      $("#refcheck").innerHTML = `Default settings, precomputed by <code>trend_lite.py</code> when the data was exported. ` +
+        `Your browser reruns it once the engine has loaded and checks it against the paper engine.`;
+    } else if (ref && lastDefault && o.sharpe != null) {
       const d = Math.abs(o.sharpe - ref.sharpe);
-      $("#refcheck").innerHTML = `Default settings vs the paper engine (<span class="m">trend.model.backtest</span>, same data, ${esc(ref.days)} days): ` +
+      $("#refcheck").innerHTML = `Default settings vs the paper engine (<code>trend.model.backtest</code>, same data, ${esc(ref.days)} days): ` +
         `${o.sharpe.toFixed(3)} here, ${ref.sharpe.toFixed(3)} there, difference ${d.toFixed(4)} ` +
-        (d < 0.01 ? `<span class="ok">· match</span>` : `<b>· MISMATCH</b>`);
+        (d < 0.01 ? `<span class="ok">match</span>` : `<b>MISMATCH</b>`);
     } else {
       $("#refcheck").textContent = "Signal at close t, trade t+1. Net of v1 costs × multiplier; no market impact. Exploration on seen data, not evidence.";
     }
-    $("#crisis").innerHTML = Object.entries(o.crisis).sort((a, b) => (a[1].start < b[1].start ? -1 : 1)).map(([k, c]) => `<tr><td>${esc(k)}</td><td class="dates">${esc(c.start)} – ${esc(c.end)}</td>` +
+    $("#crisis").innerHTML = Object.entries(o.crisis).sort((a, b) => (a[1].start < b[1].start ? -1 : 1)).map(([k, c]) =>
+      `<tr><th scope="row">${esc(k)}</th><td>${esc(c.start)} – ${esc(c.end)}</td>` +
       `<td class="n">${c.days || "—"}</td><td class="n">${c.cum_net_return == null ? "—" : pct(c.cum_net_return)}</td></tr>`).join("");
-    drawEquity(o);
+    drawEquity($("#equity"), o, { live: $("#equity-live"), accentLabel: "forward" });
   }
 
-  function drawEquity(o) {
-    if (!window.Plotly || !o) return;
-    const x = [], y = [];
-    for (let i = 0; i < o.dates.length; i++) {      // break the line across gaps (crisis windows)
-      if (i && (Date.parse(o.dates[i]) - Date.parse(o.dates[i - 1])) > 10 * 864e5) { x.push(null); y.push(null); }
-      x.push(o.dates[i]); y.push(o.equity[i]);
-    }
+  function drawEquity(el, o, opt) {
+    if (!window.Kit || !o || !o.dates.length) return;
     const first = o.dates[0], lastD = o.dates[o.dates.length - 1];
     const atEnd = META && lastD === META.last_date;
-    const x1 = atEnd ? "2027-03-31" : lastD;               // show the forward band when the range reaches the end of data
-    const bands = META ? LABEL_BANDS(META).filter((b) => b.x1 > first && b.x0 < x1) : [];
-    const shapes = bands.map((b) => ({ type: "rect", xref: "x", yref: "paper", x0: b.x0 < first ? first : b.x0, x1: b.x1 > x1 ? x1 : b.x1,
-      y0: 0, y1: 1, fillcolor: css(b.key), line: { width: 0 }, layer: "below" }));
-    const narrow = window.innerWidth < 600;
-    const span = Date.parse(x1) - Date.parse(first);
-    const wide = (b) => (Date.parse(b.x1 > x1 ? x1 : b.x1) - Date.parse(b.x0 < first ? first : b.x0)) / span > (narrow ? 0.14 : 0.07);
-    const ann = bands.filter(wide).map((b) => ({ xref: "x", yref: "paper", x: b.x0 < first ? first : b.x0, y: 1, yanchor: "bottom", xanchor: "left",
-      text: narrow && b.name === "contam. + seen" ? "c+s" : b.name, showarrow: false, font: { size: 10, color: css("--muted") } }));
-    Plotly.react("equity", [{
-      x, y, mode: "lines", connectgaps: false, line: { width: 1.6, color: css("--accent") },
-      hovertemplate: "%{x|%Y-%m-%d}  %{y:.3f}<extra></extra>",
-    }], baseLayout({ shapes, annotations: ann, yaxis: { type: "log" }, xaxis: { range: [first, x1] } }),
-    { displayModeBar: false, responsive: true });
+    const x1 = atEnd ? FIRST_READ : lastD;          // show the forward band when the range reaches the end of data
+    Kit.lineChart(el, {
+      series: [{ name: "growth of 1", x: o.dates, y: o.equity }],
+      log: true, xMin: first, xMax: x1, gapDays: 10, animate: !!opt.animate, live: opt.live,
+      bands: META ? bands(META, opt.accentLabel) : [],
+      yTick: (v) => (v >= 10 ? v.toFixed(0) : String(+v.toFixed(2))),
+      tip: (i, date) => `${date}  growth ${o.equity[i].toFixed(3)}`,
+    });
   }
 
-  /* ---------- loading ---------- */
+  /* ---------- engine loading ---------- */
   function stage(s, detail) {
     const order = ["runtime", "packages", "data", "ready"];
     const i = order.indexOf(s);
-    $$(".stages span").forEach((el, j) => { el.classList.toggle("ok", j < i || s === "ready"); el.classList.toggle("on", j === i && s !== "ready"); });
-    $("#loader-text").textContent = s === "ready" ? "Ready · runs locally in your browser" : `Loading ${s}: ${detail}…`;
-    if (s === "ready") $("#loader").classList.add("done");
+    $$(".k-steps li").forEach((el, j) => { el.classList.toggle("is-ok", j < i || s === "ready"); el.classList.toggle("is-on", j === i && s !== "ready"); });
+    const L = $("#loader");
+    L.classList.toggle("is-busy", s !== "ready");
+    L.classList.toggle("is-ok", s === "ready");
+    $("#loader-text").textContent = s === "ready" ? "Ready. The engine runs locally in your browser." : `Loading ${s}: ${detail}…`;
   }
 
   function startWorker() {
-    if (!window.Worker) { $("#loader-text").textContent = "This browser has no Web Worker support; the lab cannot run."; return; }
+    if (started) return;
+    started = true;
+    if (!window.Worker) { $("#loader-text").textContent = "This browser has no Web Worker support, so the lab cannot run. The numbers shown are the precomputed default."; return; }
+    stage("runtime", "Python runtime (Pyodide 0.26.4)");
     worker = new Worker("worker.js");
     worker.onmessage = (ev) => {
       const m = ev.data;
       if (m.type === "stage") stage(m.stage, m.detail);
-      else if (m.type === "ready") { ready = true; stage("ready"); $("#run").disabled = false; send(); }
+      else if (m.type === "ready") { ready = true; stage("ready"); send(); }
       else if (m.type === "result") onResult(m);
       else if (m.type === "error") {
         const msg = "Error: " + String(m.message).split("\n").slice(-2).join(" ");
         console.error(m.message);
         if (m.id == null) {                       // boot failure: the lab cannot run
           inflight = false; ready = false;
-          $("#loader").classList.add("err"); $("#loader-text").textContent = msg;
+          const L = $("#loader"); L.classList.remove("is-busy"); L.classList.add("is-err");
+          $("#loader-text").textContent = msg + " The numbers shown are the precomputed default.";
           return;
         }
         sentDefault.delete(m.id);
         inflight = false;
         $("#ctime").textContent = msg;
         if (queued) { const q = queued; queued = null; inflight = true; post(q.p, q.d, q.j); }
-        else $(".out").classList.remove("stale");
+        else { $("#out").classList.remove("is-stale"); $("#out").setAttribute("aria-busy", "false"); }
       }
     };
-    worker.onerror = (e) => { $("#loader").classList.add("err"); $("#loader-text").textContent = "Worker failed to start: " + (e.message || e); };
+    worker.onerror = (e) => {
+      const L = $("#loader"); L.classList.remove("is-busy"); L.classList.add("is-err");
+      $("#loader-text").textContent = "The engine failed to start: " + (e.message || e) + ". The numbers shown are the precomputed default.";
+    };
   }
 
   function wire() {
     const form = $("#controls");
     form.addEventListener("input", () => schedule());
     form.addEventListener("change", () => schedule());
-    form.addEventListener("submit", (e) => { e.preventDefault(); clearTimeout(timer); syncControls(); if (ready) send(); });
+    form.addEventListener("submit", (e) => { e.preventDefault(); clearTimeout(timer); syncControls(); startWorker(); if (ready) send(); });
     $("#reset").addEventListener("click", () => {
       $("#signal").value = DEFAULTS.signal;
       $$("input[name=h]").forEach((i) => { i.checked = true; });
@@ -263,26 +299,40 @@
       $(`input[name=period][value=${DEFAULTS.period}]`).checked = true;
       schedule(0);
     });
-    let rz;
-    const redraw = () => { clearTimeout(rz); rz = setTimeout(() => { drawEquity(last); if (window.__fwd) renderForward(window.__fwd); }, 150); };
-    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
-    window.addEventListener("resize", redraw);
+    $("#hero-run").addEventListener("click", () => {
+      startWorker();
+      setTimeout(() => $("#signal").focus({ preventScroll: true }), Kit.reducedMotion() ? 0 : 600);
+    });
+    // load the engine a little before the lab scrolls into view
+    if ("IntersectionObserver" in window) {
+      const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); startWorker(); } }, { rootMargin: "300px 0px" });
+      io.observe($("#lab"));
+    }
     syncControls();
   }
 
   async function init() {
     wire();
-    startWorker();
+    const run = getJSON("data/default_run.json").catch((e) => { console.error(e); return null; });
     try {
       const [v, f, m] = await Promise.all([getJSON("data/verdicts.json"), getJSON("data/forward.json"), getJSON("data/meta.json")]);
       META = m;
-      $("#vintage").textContent = m.vintage; $("#lastdate").textContent = m.last_date;
+      $$(".vintage").forEach((el) => { el.textContent = m.vintage; });
+      $("#lastdate").textContent = m.last_date;
+      $("#hn-start").textContent = m.labels.forward_start;
       renderVerdicts(v);
-      window.__fwd = f; renderForward(f);
-      if (last) renderResult(last);
+      $("#hn-read").textContent = FIRST_READ;
+      renderForward(f);
     } catch (e) {
       $("#tally").textContent = "Could not load data files: " + e.message;
       console.error(e);
+    }
+    const d = await run;
+    if (d) {
+      renderHero(d);
+      if (!last) { last = d; lastDefault = true; lastDisjoint = false; renderResult(d); }
+    } else if (!last) {
+      $("#refcheck").textContent = "The precomputed default run could not be loaded; the engine will compute it.";
     }
   }
   document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", init) : init();
